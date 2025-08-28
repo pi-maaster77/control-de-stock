@@ -1,0 +1,8 @@
+{
+    "fg": "#ffffff",
+    "bg": "#161423",
+    "font": [
+        "Adwaita Mono",
+        12
+    ]
+}
