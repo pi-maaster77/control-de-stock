@@ -1,7 +1,7 @@
 import tkinter as tk
 import os
 import sqlite3
-import querry
+import libreria.querry as querry
 from tkinter import ttk
 from tabs.compra import Compra
 from tabs.venta import Venta

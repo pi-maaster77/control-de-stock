@@ -5,3 +5,5 @@ tabs/__pycache__
 *.pyd
 
 stock.db
+
+recibo_venta_*.txt

@@ -22,11 +22,12 @@ class Stock(ttk.Frame):
         self.stock_eliminar.pack(side="left", anchor="w", padx=5, pady=5)
         
         # --- Tabla ---
-        self.stock_tree = ttk.Treeview(self, columns=("ID","Producto", "Precio", "Cantidad", "Umbral"), show="headings")
+        self.stock_tree = ttk.Treeview(self, columns=("ID","Producto", "Precio", "Cantidad", "Margen", "Umbral"), show="headings")
         self.stock_tree.heading("ID", text="Codigo De Barras")
         self.stock_tree.heading("Producto", text="Producto")
         self.stock_tree.heading("Precio", text="Precio")
         self.stock_tree.heading("Cantidad", text="Cantidad")
+        self.stock_tree.heading("Margen", text="Margen")
         self.stock_tree.heading("Umbral", text="Umbral")
         self.stock_tree.pack(fill="both", expand=True)
         self.stock_tree.bind("<<TreeviewSelect>>", self.actualizar_estado_botones_stock)
@@ -51,7 +52,7 @@ class Stock(ttk.Frame):
                 nuevo_margen = float(margen_entry.get())
                 conncection = sqlite3.connect("stock.db")
                 cursor = conncection.cursor()
-                cursor.execute("""UPDATE productos 
+                cursor.execute("""UPDATE producto 
                                 SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=?, margen=?
                                 WHERE cdb=?""",
                             (nuevo_cdb, nuevo_nombre, nuevo_precio, nueva_cantidad, nuevo_umbral, nuevo_margen, cdb))
@@ -102,7 +103,7 @@ class Stock(ttk.Frame):
         cursor = conncection.cursor()
         for i in self.stock_tree.get_children():
             self.stock_tree.delete(i)
-        cursor.execute("SELECT cdb, nombre, precio, cantidad, umbral FROM productos")
+        cursor.execute("SELECT cdb, nombre, precio, cantidad, margen, umbral FROM producto")
         for row in cursor.fetchall():
             self.stock_tree.insert("", "end", values=row)
 
@@ -117,7 +118,7 @@ class Stock(ttk.Frame):
                 margen = float(margen_entry.get())
                 conncection = sqlite3.connect("stock.db")
                 cursor = conncection.cursor()
-                cursor.execute("INSERT INTO productos (cdb, nombre, precio, cantidad, umbral, margen) VALUES (?, ?, ?, ?, ?, ?)",
+                cursor.execute("INSERT INTO producto (cdb, nombre, precio, cantidad, umbral, margen) VALUES (?, ?, ?, ?, ?, ?)",
                             (cdb, nombre, precio, cantidad, umbral, margen))
                 conncection.commit()
                 conncection.close()
@@ -170,7 +171,7 @@ class Stock(ttk.Frame):
             try:
                 conncection = sqlite3.connect("stock.db")
                 cursor = conncection.cursor()
-                cursor.execute("DELETE FROM productos WHERE cdb=?", (cdb,))
+                cursor.execute("DELETE FROM producto WHERE cdb=?", (cdb,))
                 conncection.commit()
                 conncection.close()
                 self.actualizar_stock_tab()

@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
+import libreria.recibo as recibo
+
 
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat(" "))
 sqlite3.register_converter("timestamp", lambda val: datetime.datetime.fromisoformat(val.decode()))
@@ -60,6 +62,15 @@ class Venta(ttk.Frame):
         conn = sqlite3.connect("stock.db", detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = conn.cursor()
 
+        """
+        CREATE TABLE IF NOT EXISTS venta (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """
+        cursor.execute("INSERT INTO venta (fecha) VALUES (?)", (datetime.datetime.now(),))
+        venta_id = cursor.lastrowid
+
         for item_id in self.ventas_tree.get_children():
             values = self.ventas_tree.item(item_id)['values']
             try:
@@ -69,17 +80,19 @@ class Venta(ttk.Frame):
                 if cantidad <= 0:
                     raise ValueError("La cantidad debe ser positiva")
 
-                cursor.execute("SELECT cantidad, precio FROM productos WHERE cdb=?", (cdb,))
+                cursor.execute("SELECT cantidad, precio, margen FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
-
+                
                 if result and result[0] >= cantidad:
                     nueva_cantidad = result[0] - cantidad
-                    precio_venta = result[1] if result[1] else 1
+                    precio_base = result[1] if result[1] else 1
+                    margen = result[2] if result[2] is not None else 0.20
+                    precio_venta = precio_base * (1 + margen)
                     ganancias_local = cantidad * precio_venta
 
-                    cursor.execute("UPDATE productos SET cantidad=? WHERE cdb=?", (nueva_cantidad, cdb))
-                    cursor.execute("INSERT INTO ventas (cdb, cantidad, precio_venta, fecha) VALUES (?, ?, ?, ?)",
-                                   (cdb, cantidad, precio_venta, datetime.datetime.now()))
+                    cursor.execute("UPDATE producto SET cantidad=? WHERE cdb=?", (nueva_cantidad, cdb))
+                    cursor.execute("INSERT INTO venta_detalle (venta, cdb, cantidad, precio_venta) VALUES (?, ?, ?, ?)", (venta_id, cdb, cantidad, precio_venta))
+
                     cursor.execute("UPDATE dinero SET total = total + ? WHERE id = 1", (ganancias_local,))
                     conn.commit()
                 else:
@@ -92,6 +105,7 @@ class Venta(ttk.Frame):
         conn.close()
         self.venta_resultado.config(text=f"Ganancia: ${self.total:.2f}")
         self.limpiar()
+        recibo.generar_recibo(venta_id)
         self.funalerta()
 
     def anadir(self):
@@ -124,12 +138,13 @@ class Venta(ttk.Frame):
                 cdb = int(cdb_entry.get())
                 conn = sqlite3.connect("stock.db")
                 cursor = conn.cursor()
-                cursor.execute("SELECT nombre, precio, cantidad FROM productos WHERE cdb=?", (cdb,))
+                cursor.execute("SELECT nombre, precio, cantidad, margen FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
                 conn.close()
 
                 if result:
-                    nombre, precio, cantidad_disponible = result
+                    nombre, precio, cantidad_disponible, margen = result
+                    precio_venta = precio * (1 + margen)
                     nombre_var.set(nombre)
                     stock_maximo.set(cantidad_disponible)
 
@@ -159,15 +174,16 @@ class Venta(ttk.Frame):
 
                 conn = sqlite3.connect("stock.db")
                 cursor = conn.cursor()
-                cursor.execute("SELECT nombre, precio FROM productos WHERE cdb=?", (cdb,))
+                cursor.execute("SELECT nombre, precio, margen FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
                 conn.close()
 
                 if result:
-                    nombre, precio = result
-                    self.ventas_tree.insert("", "end", values=(cdb, nombre, precio, cantidad))
+                    nombre, precio, margen = result
+                    precio_venta = precio * (1 + margen)
+                    self.ventas_tree.insert("", "end", values=(cdb, nombre, precio_venta, cantidad))
                     anadir_ventana.destroy()
-                    self.total += precio * cantidad
+                    self.total += precio_venta * cantidad
                     self.venta_resultado.config(text=f"Total: ${self.total:.2f}")
                 else:
                     messagebox.showerror("Error", "Producto no encontrado")
@@ -198,7 +214,7 @@ class Venta(ttk.Frame):
         try:
             conn = sqlite3.connect("stock.db")
             cursor = conn.cursor()
-            cursor.execute("SELECT cantidad FROM productos WHERE cdb=?", (cdb,))
+            cursor.execute("SELECT cantidad FROM producto WHERE cdb=?", (cdb,))
             result = cursor.fetchone()
             conn.close()
             if result:
@@ -277,9 +293,9 @@ class Venta(ttk.Frame):
         for child in self.ventas_tree.get_children():
             values = self.ventas_tree.item(child)['values']
             try:
-                precio = float(values[2])
+                precio_venta = float(values[2])  # Este ya es el precio con margen
                 cantidad = int(values[3])
-                self.total += precio * cantidad
+                self.total += precio_venta * cantidad
             except (ValueError, IndexError) as e:
                 print(f"Error al recalcular total en item {values}: {e}")
         self.venta_resultado.config(text=f"Total: ${self.total:.2f}")

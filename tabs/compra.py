@@ -33,11 +33,11 @@ class Compra(ttk.Frame):
                 raise ValueError("La cantidad debe ser positiva")
             conncection = sqlite3.connect("stock.db")
             cursor = conncection.cursor()
-            cursor.execute("SELECT cantidad FROM productos WHERE cdb=?", (producto,))
+            cursor.execute("SELECT cantidad FROM producto WHERE cdb=?", (producto,))
             result = cursor.fetchone()
             if result:
                 nueva_cantidad = result[0] + cantidad
-                cursor.execute("UPDATE productos SET cantidad=? WHERE cdb=?", (nueva_cantidad, producto))
+                cursor.execute("UPDATE producto SET cantidad=? WHERE cdb=?", (nueva_cantidad, producto))
             conncection.commit()
             conncection.close()
             self.limpiar_campos()

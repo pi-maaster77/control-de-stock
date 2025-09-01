@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
-from notificacion import notificar
+from libreria.notificacion import notificar
 
 
 
@@ -24,7 +24,7 @@ class Alerta(ttk.Frame):
         cursor = conncection.cursor()
         for i in self.alerta_tree.get_children():
             self.alerta_tree.delete(i)
-        cursor.execute("SELECT cdb, nombre, cantidad, umbral FROM productos WHERE cantidad <= umbral")
+        cursor.execute("SELECT cdb, nombre, cantidad, umbral FROM producto WHERE cantidad <= umbral")
         for row in cursor.fetchall():
             self.alerta_tree.insert("", "end", values=row)
         actual = len(self.alerta_tree.get_children())

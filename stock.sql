@@ -3,7 +3,7 @@
 PRAGMA foreign_keys = ON;
 
 
-CREATE TABLE IF NOT EXISTS productos (
+CREATE TABLE IF NOT EXISTS producto (
     cdb INTEGER PRIMARY KEY, --- Código de barras 
     nombre TEXT NOT NULL, --- Nombre del producto
     precio REAL NOT NULL, --- Precio del producto
@@ -12,13 +12,34 @@ CREATE TABLE IF NOT EXISTS productos (
     margen REAL DEFAULT 0.20 --- Margen de ganancia
 );
 
-CREATE TABLE IF NOT EXISTS ventas (
+CREATE TABLE IF NOT EXISTS venta (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS venta_detalle (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     cdb INTEGER NOT NULL,
     cantidad INTEGER NOT NULL,
-    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     precio_venta REAL,
-    FOREIGN KEY (cdb) REFERENCES productos(cdb)
+    venta INTEGER,
+    FOREIGN KEY (venta) REFERENCES venta(id),
+    FOREIGN KEY (cdb) REFERENCES producto(cdb)
+);
+
+CREATE TABLE IF NOT EXISTS compra (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+);
+
+CREATE TABLE IF NOT EXISTS compra_detalle (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cdb INTEGER NOT NULL,
+    cantidad INTEGER NOT NULL,
+    precio_compra REAL,
+    compra INTEGER,
+    FOREIGN KEY (compra) REFERENCES compra(id),
+    FOREIGN KEY (cdb) REFERENCES producto(cdb)
 );
 
 CREATE TABLE IF NOT EXISTS dinero (
