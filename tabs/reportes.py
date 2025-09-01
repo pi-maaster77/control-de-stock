@@ -30,6 +30,10 @@ class Reportes(ttk.Frame):
         self.compras_tree.pack(fill='x', padx=10, pady=5)
 
     def actualizar(self):
+        for i in self.ventas_tree.get_children():
+            self.ventas_tree.delete(i)
+        for i in self.compras_tree.get_children():
+            self.compras_tree.delete(i)
         try:
             conn = sqlite3.connect("stock.db")  # Reemplaza con tu archivo .db
             cursor = conn.cursor()

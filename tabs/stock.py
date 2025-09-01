@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
+import datetime
 
 class Stock(ttk.Frame):
     def __init__(self, notebook):
@@ -116,16 +117,38 @@ class Stock(ttk.Frame):
                 cantidad = int(cantidad_entry.get())
                 umbral = int(umbral_entry.get())
                 margen = float(margen_entry.get())
-                conncection = sqlite3.connect("stock.db")
-                cursor = conncection.cursor()
-                cursor.execute("INSERT INTO producto (cdb, nombre, precio, cantidad, umbral, margen) VALUES (?, ?, ?, ?, ?, ?)",
-                            (cdb, nombre, precio, cantidad, umbral, margen))
-                conncection.commit()
-                conncection.close()
+
+                connection = sqlite3.connect("stock.db")
+                cursor = connection.cursor()
+
+                # 1. Insertar producto
+                cursor.execute("""
+                    INSERT INTO producto (cdb, nombre, precio, cantidad, umbral, margen)
+                    VALUES (?, ?, ?, ?, ?, ?)""",
+                    (cdb, nombre, precio, cantidad, umbral, margen)
+                )
+
+                # 2. Registrar compra
+                cursor.execute("INSERT INTO compra (fecha) VALUES (?)", (datetime.datetime.now(),))
+                compra_id = cursor.lastrowid
+
+                cursor.execute("""
+                    INSERT INTO compra_detalle (compra, cdb, cantidad, precio_compra)
+                    VALUES (?, ?, ?, ?)""",
+                    (compra_id, cdb, cantidad, precio)
+                )
+
+                # 3. Actualizar dinero (restar costo)
+                cursor.execute("UPDATE dinero SET total = total - ? WHERE id = 1", (precio * cantidad,))
+
+                connection.commit()
+                connection.close()
+
                 self.actualizar_stock_tab()
                 top.destroy()
             except Exception as e:
                 messagebox.showerror("Error", f"Error al añadir producto: {e}")
+
 
         top = tk.Toplevel(self)
         top.title("Añadir Producto")
