@@ -4,7 +4,7 @@ import sqlite3
 import querry
 from tkinter import ttk
 from tabs.compra import Compra
-from tabs.venta_2 import Venta
+from tabs.venta import Venta
 from tabs.stock import Stock
 from tabs.alerta import Alerta
 from tabs.reportes import Reportes
