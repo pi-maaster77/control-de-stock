@@ -1,8 +1,8 @@
 {
-    "fg": "#ffffff",
-    "bg": "#161423",
+    "fg": "#000000",
+    "bg": "#999896",
     "font": [
-        "Adwaita Mono",
-        12
+        "FreeMono",
+        10
     ]
 }
