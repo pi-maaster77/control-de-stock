@@ -8,6 +8,7 @@ from tabs.venta import Venta
 from tabs.stock import Stock
 from tabs.alerta import Alerta
 from tabs.reportes import Reportes
+from tabs.caja import Caja
 
 root = tk.Tk()
 root.title("Gestor de Stock")
@@ -20,6 +21,7 @@ notebook.pack(fill="both", expand=True)
 
 funalerta = lambda : None
 
+caja = Caja(notebook)
 stock = Stock(notebook)
 alerta = Alerta(notebook)
 compra = Compra(notebook)

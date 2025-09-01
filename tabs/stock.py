@@ -182,24 +182,36 @@ class Stock(ttk.Frame):
 
 
     def eliminar_stock_tab(self):
-        selected = self.stock_tree.selection()
-        if not selected:
-            messagebox.showwarning("Advertencia", "Seleccione un producto para eliminar")
+        seleccion = self.stock_tree.selection()
+        if not seleccion:
+            messagebox.showwarning("Advertencia", "Seleccione uno o más productos para eliminar")
+            return
+        if len(seleccion) == 1:
+            item = self.stock_tree.item(seleccion[0])
+            producto = item['values'][1]
+            mensaje = f"¿Está seguro de que desea eliminar el producto '{producto}'?"
+        else:
+            mensaje = f"¿Está seguro de que desea eliminar los {len(seleccion)} productos seleccionados?"
+
+        if not messagebox.askyesno("Confirmar", mensaje):
             return
 
-        item = self.stock_tree.item(selected[0])
-        cdb = item['values'][0]
+        try:
+            conn = sqlite3.connect("stock.db")
+            cursor = conn.cursor()
 
-        if messagebox.askyesno("Confirmar", "¿Está seguro de que desea eliminar este producto?"):
-            try:
-                conncection = sqlite3.connect("stock.db")
-                cursor = conncection.cursor()
+            for item_id in seleccion:
+                item = self.stock_tree.item(item_id)
+                cdb = item['values'][0]
                 cursor.execute("DELETE FROM producto WHERE cdb=?", (cdb,))
-                conncection.commit()
-                conncection.close()
-                self.actualizar_stock_tab()
-            except Exception as e:
-                messagebox.showerror("Error", f"Error al eliminar producto: {e}")
+
+            conn.commit()
+            conn.close()
+
+            self.actualizar_stock_tab()
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al eliminar productos: {e}")
+
 
     def actualizar_estado_botones_stock(self, event=None):
         seleccion = self.stock_tree.selection()
