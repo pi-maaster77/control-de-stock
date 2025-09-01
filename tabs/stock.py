@@ -39,7 +39,7 @@ class Stock(ttk.Frame):
             return
 
         item = self.stock_tree.item(selected[0])
-        cdb, nombre, precio, cantidad, umbral = item['values']
+        cdb, nombre, precio, cantidad, umbral, margen = item['values']
 
         def guardar():
             try:
@@ -48,12 +48,13 @@ class Stock(ttk.Frame):
                 nuevo_precio = float(precio_entry.get())
                 nueva_cantidad = int(cantidad_entry.get())
                 nuevo_umbral = int(umbral_entry.get())
+                nuevo_margen = float(margen_entry.get())
                 conncection = sqlite3.connect("stock.db")
                 cursor = conncection.cursor()
                 cursor.execute("""UPDATE productos 
-                                SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=? 
+                                SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=?, margen=?
                                 WHERE cdb=?""",
-                            (nuevo_cdb, nuevo_nombre, nuevo_precio, nueva_cantidad, nuevo_umbral, cdb))
+                            (nuevo_cdb, nuevo_nombre, nuevo_precio, nueva_cantidad, nuevo_umbral, nuevo_margen, cdb))
                 conncection.commit()
                 conncection.close()
                 self.actualizar_stock_tab()
@@ -89,6 +90,11 @@ class Stock(ttk.Frame):
         umbral_entry.insert(0, str(umbral))
         umbral_entry.pack()
 
+        tk.Label(top, text="Margen:").pack()
+        margen_entry = tk.Entry(top)
+        margen_entry.insert(0, str(margen))
+        margen_entry.pack()
+
         tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
     
     def actualizar_stock_tab(self):
@@ -108,10 +114,11 @@ class Stock(ttk.Frame):
                 precio = float(precio_entry.get())
                 cantidad = int(cantidad_entry.get())
                 umbral = int(umbral_entry.get())
+                margen = float(margen_entry.get())
                 conncection = sqlite3.connect("stock.db")
                 cursor = conncection.cursor()
-                cursor.execute("INSERT INTO productos (cdb, nombre, precio, cantidad, umbral) VALUES (?, ?, ?, ?, ?)",
-                            (cdb, nombre, precio, cantidad, umbral))
+                cursor.execute("INSERT INTO productos (cdb, nombre, precio, cantidad, umbral, margen) VALUES (?, ?, ?, ?, ?, ?)",
+                            (cdb, nombre, precio, cantidad, umbral, margen))
                 conncection.commit()
                 conncection.close()
                 self.actualizar_stock_tab()
@@ -141,6 +148,11 @@ class Stock(ttk.Frame):
         tk.Label(top, text="Umbral:").pack()
         umbral_entry = tk.Entry(top)
         umbral_entry.pack()
+
+        tk.Label(top, text="Margen:").pack()
+        margen_entry = tk.Entry(top)
+        margen_entry.pack()
+        margen_entry.insert(0, "0.20")  # Valor por defecto del margen
 
         tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
 

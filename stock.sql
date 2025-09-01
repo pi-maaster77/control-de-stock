@@ -7,8 +7,9 @@ CREATE TABLE IF NOT EXISTS productos (
     cdb INTEGER PRIMARY KEY, --- Código de barras 
     nombre TEXT NOT NULL, --- Nombre del producto
     precio REAL NOT NULL, --- Precio del producto
-    cantidad INTEGER DEFAULT 0,
-    umbral INTEGER DEFAULT 0
+    cantidad INTEGER DEFAULT 0, --- Cantidad en stock
+    umbral INTEGER DEFAULT 0, --- Umbral de stock para alertas
+    margen REAL DEFAULT 0.20 --- Margen de ganancia
 );
 
 CREATE TABLE IF NOT EXISTS ventas (
