@@ -52,12 +52,13 @@ class Stock(ttk.Frame):
                 nueva_cantidad = int(cantidad_entry.get())
                 nuevo_umbral = int(umbral_entry.get())
                 nuevo_margen = float(margen_entry.get())
+                nuevo_perecedero = perecedero_var.get()
                 conncection = sqlite3.connect(db)
                 cursor = conncection.cursor()
                 cursor.execute("""UPDATE producto 
-                                SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=?, margen=?
+                                SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=?, margen=?, perecedero=?
                                 WHERE cdb=?""",
-                            (nuevo_cdb, nuevo_nombre, nuevo_precio, nueva_cantidad, nuevo_umbral, nuevo_margen, cdb))
+                            (nuevo_cdb, nuevo_nombre, nuevo_precio, nueva_cantidad, nuevo_umbral, nuevo_margen, nuevo_perecedero, cdb))
                 conncection.commit()
                 conncection.close()
                 self.actualizar_stock_tab()
@@ -98,6 +99,12 @@ class Stock(ttk.Frame):
         margen_entry.insert(0, str(margen))
         margen_entry.pack()
 
+        tk.Label(top, text="Perecedero").pack()
+        perecedero_var = tk.BooleanVar()
+        perecedero_check = tk.Checkbutton(top, variable=perecedero_var)
+        perecedero_check.pack()
+        perecedero_var.set(bool(item.get('perecedero', False)))
+
         tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
     
     def actualizar_stock_tab(self):
@@ -118,15 +125,16 @@ class Stock(ttk.Frame):
                 cantidad = int(cantidad_entry.get())
                 umbral = int(umbral_entry.get())
                 margen = float(margen_entry.get())
+                perecedero = perecedero_var.get()
 
                 connection = sqlite3.connect(db)
                 cursor = connection.cursor()
 
                 # 1. Insertar producto
                 cursor.execute("""
-                    INSERT INTO producto (cdb, nombre, precio, cantidad, umbral, margen)
-                    VALUES (?, ?, ?, ?, ?, ?)""",
-                    (cdb, nombre, precio, cantidad, umbral, margen)
+                    INSERT INTO producto (cdb, nombre, precio, cantidad, umbral, margen, perecedero)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (cdb, nombre, precio, cantidad, umbral, margen, perecedero)
                 )
 
                 # 2. Registrar compra
@@ -179,6 +187,12 @@ class Stock(ttk.Frame):
         margen_entry = tk.Entry(top)
         margen_entry.pack()
         margen_entry.insert(0, "0.20")  # Valor por defecto del margen
+
+        tk.Label(top, text="Perecedero").pack()
+        perecedero_var = tk.BooleanVar()
+        perecedero_check = tk.Checkbutton(top, variable=perecedero_var)
+        perecedero_check.pack()
+        perecedero_var.set(False)  # Valor por defecto
 
         tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
 

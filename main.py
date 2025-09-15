@@ -11,6 +11,7 @@ from tabs.reportes import Reportes
 from tabs.caja import Caja
 from confiuguracion import Estilo
 from libreria.config import db
+from tabs.vencimientos import Vencimientos
 
 root = tk.Tk()
 root.title("Gestor de Stock")
@@ -26,6 +27,7 @@ stock = Stock(notebook)
 alerta = Alerta(notebook)
 compra = Compra(notebook)
 venta = Venta(notebook, alerta.actualizar_alerta_tab)
+vencimientos = Vencimientos(notebook)
 
 # Estilo().aplicar(root)
 
@@ -36,6 +38,7 @@ def on_tab_change(event):
     alerta.actualizar_alerta_tab()
     transacciones.actualizar()
     caja.actualizar_total()
+    vencimientos.actualizar()
 
 notebook.bind("<<NotebookTabChanged>>", on_tab_change)
 

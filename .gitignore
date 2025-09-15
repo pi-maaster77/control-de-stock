@@ -4,7 +4,7 @@ tabs/__pycache__
 *.pyo
 *.pyd
 
-stock.db
+stock.db*
 settings.txt
 
 recibo_venta_*.txt

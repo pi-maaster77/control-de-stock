@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS producto (
     precio REAL NOT NULL, --- Precio del producto
     cantidad INTEGER DEFAULT 0, --- Cantidad en stock
     umbral INTEGER DEFAULT 0, --- Umbral de stock para alertas
-    margen REAL DEFAULT 0.20 --- Margen de ganancia
+    margen REAL DEFAULT 0.20, --- Margen de ganancia
+    perecedero BOOLEAN DEFAULT 0 --- Si es perecedero o no
 );
 
 CREATE TABLE IF NOT EXISTS venta (

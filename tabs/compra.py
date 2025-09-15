@@ -2,8 +2,11 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
+
+
 from libreria.config import db
 import libreria.querry as querry
+from typing import Optional
 
 class Compra(ttk.Frame):
     def __init__(self, notebook):
@@ -34,7 +37,7 @@ class Compra(ttk.Frame):
         self.compra_tree.heading("Producto", text="Producto")
         self.compra_tree.heading("Precio", text="Precio Compra")
         self.compra_tree.heading("Cantidad", text="Cantidad")
-        self.compra_tree.heading("Vencimiento", text="Proximo Vencimiento")
+        self.compra_tree.heading("Vencimiento", text="Próximo Vencimiento")
         self.compra_tree.pack(fill="both", expand=True)
 
         self.compra_total_frame = ttk.Frame(self)
@@ -54,8 +57,44 @@ class Compra(ttk.Frame):
         self.total = 0
         self.compra_resultado.config(text=f"Total: ${self.total:.2f}")
 
+    # Helper para parsear fechas
+    def _parse_fecha(self, text: str) -> Optional[datetime.date]:
+        if not text:
+            return None
+        if isinstance(text, datetime.date):
+            return text
+        txt = str(text).strip()
+        formatos = ["%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d.%m.%Y"]
+        for fmt in formatos:
+            try:
+                return datetime.datetime.strptime(txt, fmt).date()
+            except Exception:
+                continue
+        try:
+            return datetime.date.fromisoformat(txt)
+        except Exception:
+            return None
+
+    # Helper para leer fecha desde widget de forma robusta
+    def _leer_fecha_desde_widget(self, widget) -> Optional[datetime.date]:
+        try:
+            if hasattr(widget, "get_date"):
+                val = widget.get_date()
+                if isinstance(val, datetime.date):
+                    return val
+                if isinstance(val, str) and val.strip():
+                    return self._parse_fecha(val.strip())
+                return None
+            txt = widget.get().strip()
+            return self._parse_fecha(txt) if txt else None
+        except Exception:
+            try:
+                txt = str(widget.get()).strip()
+                return self._parse_fecha(txt) if txt else None
+            except Exception:
+                return None
+
     def confirmar(self):
-        # use centralized connection helper with WAL and busy timeout
         conn = querry.get_connection(db)
         cursor = conn.cursor()
 
@@ -69,30 +108,29 @@ class Compra(ttk.Frame):
                     cdb = int(values[0])
                     precio_compra = float(values[2])
                     cantidad = int(values[3])
-                    vencimiento = values[4] if values[4] != "N/A" else None
+                    raw_venc = values[4]
+
+                    if raw_venc is None or str(raw_venc).strip() in ("", "N/A", "None"):
+                        fecha_de_vencimiento = None
+                    else:
+                        fecha_de_vencimiento = self._parse_fecha(str(raw_venc).strip())
+                        if not fecha_de_vencimiento:
+                            conn.rollback()
+                            messagebox.showerror("Error", f"Formato de fecha inválido para el producto {values}.")
+                            return
 
                     cursor.execute("SELECT cantidad, precio FROM producto WHERE cdb=?", (cdb,))
                     result = cursor.fetchone()
 
-                    if vencimiento:
-                        # debe guardarse vencimiento como datetime.date
-                        if isinstance(vencimiento, str):
-                            try:
-                                fecha_de_vencimiento = datetime.datetime.strptime(vencimiento, "%d-%m-%Y").date()
-                            except ValueError:
-                                messagebox.showerror("Error", "Formato de fecha inválido. Use DD-MM-YYYY.")
-                                continue
-                        else:
-                            fecha_de_vencimiento = vencimiento
-                        # Insertar en tabla de vencimientos
+                    if fecha_de_vencimiento:
+                        fecha_iso = fecha_de_vencimiento.isoformat()
                         cursor.execute("INSERT INTO vencimientos (cdb, cantidad, fecha_vencimiento) VALUES (?, ?, ?)", 
-                                       (cdb, cantidad, fecha_de_vencimiento))
+                                       (cdb, cantidad, fecha_iso))
                     if result:
                         cantidad_actual, precio_actual = result
                         nueva_cantidad = cantidad_actual + cantidad
                         cursor.execute("UPDATE producto SET cantidad=? WHERE cdb=?", (nueva_cantidad, cdb))
 
-                        # Actualizar el precio si es distinto
                         if abs(precio_actual - precio_compra) > 0.01:
                             cursor.execute("UPDATE producto SET precio=? WHERE cdb=?", (precio_compra, cdb))
                     else:
@@ -101,26 +139,17 @@ class Compra(ttk.Frame):
 
                     cursor.execute("INSERT INTO compra_detalle (compra, cdb, cantidad, precio_compra) VALUES (?, ?, ?, ?)", 
                                    (compra_id, cdb, cantidad, precio_compra))
-
                     cursor.execute("UPDATE dinero SET total = total - ? WHERE id = 1", (precio_compra * cantidad,))
-
                 except Exception as e:
-                    # log and continue with other items
                     messagebox.showerror("Error", f"Error al procesar item {values}: {e}")
 
-            # commit all changes at the end of processing
             conn.commit()
         except Exception as e:
-            try:
-                conn.rollback()
-            except Exception:
-                pass
+            conn.rollback()
             messagebox.showerror("Error", f"Error al registrar compra: {e}")
         finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
+            conn.close()
+
         self.limpiar()
         messagebox.showinfo("Compra", "Compra registrada exitosamente.")
 
@@ -148,7 +177,7 @@ class Compra(ttk.Frame):
         precio_entry = ttk.Entry(ventana)
         precio_entry.grid(row=3, column=1, padx=5, pady=5)
 
-        ttk.Label(ventana, text="Vencimiento (DD-MM-YYYY):").grid(row=4, column=0, padx=5, pady=5)
+        ttk.Label(ventana, text="Vencimiento:").grid(row=4, column=0, padx=5, pady=5)
         vencimiento_entry = ttk.Entry(ventana)
         vencimiento_entry.grid(row=4, column=1, padx=5, pady=5)
 
@@ -161,33 +190,55 @@ class Compra(ttk.Frame):
                 cdb = int(cdb_entry.get())
                 conn = querry.get_connection(db)
                 cursor = conn.cursor()
-                cursor.execute("SELECT nombre, precio FROM producto WHERE cdb=?", (cdb,))
+                cursor.execute("SELECT nombre, precio, perecedero FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
                 conn.close()
 
                 if result:
-                    nombre, precio_actual = result
+                    nombre, precio_actual, perecedero = result
                     nombre_var.set(nombre)
                     agregar_button.config(state="normal")
 
                     precio_entry.delete(0, tk.END)
                     precio_entry.insert(0, f"{precio_actual:.2f}")
+
+                    if perecedero:
+                        vencimiento_entry.config(state="normal")
+                    else:
+                        try:
+                            vencimiento_entry.delete(0, tk.END)
+                        except Exception:
+                            pass
+                        vencimiento_entry.config(state="disabled")
                 else:
                     nombre_var.set("Producto no encontrado")
                     agregar_button.config(state="disabled")
                     precio_entry.delete(0, tk.END)
+                    vencimiento_entry.config(state="disabled")
             except ValueError:
                 nombre_var.set("Código inválido")
                 agregar_button.config(state="disabled")
                 precio_entry.delete(0, tk.END)
-
 
         def agregar_a_compra():
             try:
                 cdb = int(cdb_entry.get())
                 cantidad = int(cantidad_entry.get())
                 precio = float(precio_entry.get())
-                vencimiento = vencimiento_entry.get().strip()
+
+                conn = querry.get_connection(db)
+                cursor = conn.cursor()
+                cursor.execute("SELECT perecedero FROM producto WHERE cdb=?", (cdb,))
+                row = cursor.fetchone()
+                conn.close()
+                perecedero = bool(row[0]) if row else False
+
+                vencimiento = ''
+                if perecedero:
+                    parsed_date = self._leer_fecha_desde_widget(vencimiento_entry)
+                    if not parsed_date:
+                        raise ValueError("Producto perecedero: la fecha de vencimiento es requerida.")
+                    vencimiento = parsed_date.strftime("%d-%m-%Y")
 
                 if cantidad <= 0 or precio <= 0:
                     raise ValueError("Cantidad y precio deben ser positivos")
@@ -210,7 +261,15 @@ class Compra(ttk.Frame):
             return
 
         item = self.compra_tree.item(seleccion[0])
-        cdb, nombre, precio, cantidad = item['values']
+        try:
+            cdb, nombre, precio, cantidad, vencimiento_val = item['values']
+        except Exception:
+            vals = item.get('values', [])
+            cdb = vals[0] if len(vals) > 0 else ''
+            nombre = vals[1] if len(vals) > 1 else ''
+            precio = vals[2] if len(vals) > 2 else 0
+            cantidad = vals[3] if len(vals) > 3 else 1
+            vencimiento_val = vals[4] if len(vals) > 4 else "N/A"
 
         ventana = tk.Toplevel(self)
         ventana.title("Editar Producto")
@@ -229,41 +288,32 @@ class Compra(ttk.Frame):
         precio_entry.grid(row=2, column=1, padx=5, pady=5)
         precio_entry.insert(0, precio)
 
-        ttk.Label(ventana, text="Vencimiento (DD-MM-YYYY):").grid(row=3, column=0, padx=5, pady=5)
+        ttk.Label(ventana, text="Vencimiento:").grid(row=3, column=0, padx=5, pady=5)
         vencimiento_entry = ttk.Entry(ventana)
+        vencimiento_entry.insert(0, vencimiento_val if vencimiento_val != "N/A" else "")
         vencimiento_entry.grid(row=3, column=1, padx=5, pady=5)
-        vencimiento_entry.insert(0, item['values'][4] if item['values'][4] != "N/A" else "")
 
         def guardar():
             try:
                 nueva_cantidad = int(cantidad_entry.get())
                 nuevo_precio = float(precio_entry.get())
-                nueva_fecha_vencimiento = vencimiento_entry.get().strip()
-                if nueva_fecha_vencimiento:
-                    try:
-                        fecha_de_vencimiento = datetime.datetime.strptime(nueva_fecha_vencimiento, "%d-%m-%Y").date()
-                    except ValueError:
-                        messagebox.showerror("Error", "Formato de fecha inválido. Use DD-MM-YYYY.")
-                        return
-                else:
-                    fecha_de_vencimiento = "N/A"    
-                self.compra_tree.item(seleccion[0], values=(cdb, nombre, nuevo_precio, nueva_cantidad, fecha_de_vencimiento))
+                nueva_fecha = self._leer_fecha_desde_widget(vencimiento_entry)
+                fecha_venc = nueva_fecha.strftime("%d-%m-%Y") if nueva_fecha else "N/A"
+                self.compra_tree.item(seleccion[0], values=(cdb, nombre, nuevo_precio, nueva_cantidad, fecha_venc))
                 self.recalcular_total()
                 ventana.destroy()
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo editar: {e}")
 
-        ttk.Button(ventana, text="Guardar", command=guardar).grid(row=3, columnspan=2, padx=5, pady=5)
+        ttk.Button(ventana, text="Guardar", command=guardar).grid(row=4, columnspan=2, padx=5, pady=5)
 
     def eliminar(self):
         seleccion = self.compra_tree.selection()
         if not seleccion:
             messagebox.showwarning("Advertencia", "Seleccione un producto para eliminar")
             return
-
         for item in seleccion:
             self.compra_tree.delete(item)
-
         self.recalcular_total()
         self.actualizar_estado_botones()
 
