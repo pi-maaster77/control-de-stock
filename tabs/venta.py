@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 import sqlite3
 import datetime
 import libreria.recibo as recibo
-
+from libreria.config import db
 
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat(" "))
 sqlite3.register_converter("timestamp", lambda val: datetime.datetime.fromisoformat(val.decode()))
@@ -59,7 +59,7 @@ class Venta(ttk.Frame):
         self.venta_resultado.config(text=f"Total: ${self.total:.2f}")
 
     def vender(self):
-        conn = sqlite3.connect("stock.db", detect_types=sqlite3.PARSE_DECLTYPES)
+        conn = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = conn.cursor()
 
         """
@@ -136,7 +136,7 @@ class Venta(ttk.Frame):
         def buscar_producto(event=None):
             try:
                 cdb = int(cdb_entry.get())
-                conn = sqlite3.connect("stock.db")
+                conn = sqlite3.connect(db)
                 cursor = conn.cursor()
                 cursor.execute("SELECT nombre, precio, cantidad, margen FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
@@ -172,7 +172,7 @@ class Venta(ttk.Frame):
                 if not (1 <= cantidad <= stock_maximo.get()):
                     raise ValueError("La cantidad debe estar dentro del stock disponible")
 
-                conn = sqlite3.connect("stock.db")
+                conn = sqlite3.connect(db)
                 cursor = conn.cursor()
                 cursor.execute("SELECT nombre, precio, margen FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
@@ -212,7 +212,7 @@ class Venta(ttk.Frame):
 
         # Consultar stock desde la base de datos
         try:
-            conn = sqlite3.connect("stock.db")
+            conn = sqlite3.connect(db)
             cursor = conn.cursor()
             cursor.execute("SELECT cantidad FROM producto WHERE cdb=?", (cdb,))
             result = cursor.fetchone()

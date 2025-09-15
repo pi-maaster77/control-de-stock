@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
+from libreria.config import db
 
 class Compra(ttk.Frame):
     def __init__(self, notebook):
@@ -52,7 +53,7 @@ class Compra(ttk.Frame):
         self.compra_resultado.config(text=f"Total: ${self.total:.2f}")
 
     def confirmar(self):
-        conn = sqlite3.connect("stock.db", detect_types=sqlite3.PARSE_DECLTYPES)
+        conn = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = conn.cursor()
 
         cursor.execute("INSERT INTO compra (fecha) VALUES (?)", (datetime.datetime.now(),))
@@ -125,7 +126,7 @@ class Compra(ttk.Frame):
         def buscar_producto(event=None):
             try:
                 cdb = int(cdb_entry.get())
-                conn = sqlite3.connect("stock.db")
+                conn = sqlite3.connect(db)
                 cursor = conn.cursor()
                 cursor.execute("SELECT nombre, precio FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()

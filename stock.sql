@@ -47,4 +47,26 @@ CREATE TABLE IF NOT EXISTS dinero (
     total REAL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS configuracion (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    fg TEXT,
+    bg TEXT,
+    font_name TEXT,
+    font_size INTEGER
+);
+
 INSERT INTO dinero (id, total) VALUES(1, 0);
+
+CREATE TABLE IF NOT EXISTS configuracion (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    fg TEXT,
+    bg TEXT,
+    passwd TEXT, -- ni idea de por que no inserta esta columna, pero bueno
+    font_name TEXT,
+    font_size INTEGER
+);
+
+ALTER TABLE configuracion ADD COLUMN passwd TEXT; -- atada con alambre
+
+INSERT INTO configuracion (id, fg, bg, font_name, font_size, passwd) 
+    VALUES (1, '#FFFFFF', '#000000', 'Arial', '12', '123456')

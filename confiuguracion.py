@@ -1,58 +1,110 @@
 import tkinter as tk
 import tkinter.font as tkfont
+from tkinter import ttk
 from tkinter.colorchooser import askcolor
-import json
-
-import json
-import os
+import sqlite3
+from libreria.config import db
 
 class Estilo:
-    def __init__(self, archivo="settings.txt"):
+    def __init__(self, archivo=db):
         self.archivo = archivo
-        self.fg = "#000000"
-        self.bg = "#FFFFFF"
-        self.font = ("Arial", 12)
         self.cargar()
 
     def cargar(self):
-        if not os.path.exists(self.archivo):
-            return
         try:
-            with open(self.archivo, "r") as f:
-                datos = json.load(f)
-                self.fg = datos.get("fg", self.fg)
-                self.bg = datos.get("bg", self.bg)
-                font = datos.get("font", list(self.font))
-                self.font = tuple(font)
+            conn = sqlite3.connect(self.archivo)
+            cursor = conn.cursor()
+            cursor.execute("SELECT fg, bg, font_name, font_size FROM configuracion WHERE id = 1")
+            row = cursor.fetchone()
+            conn.close()
+
+            if row:
+                self.fg = row[0] or self.fg
+                self.bg = row[1] or self.bg
+                font_name = row[2] or self.font[0]
+                font_size = row[3] if row[3] is not None else self.font[1]
+                self.font = (font_name, font_size)
+            
         except Exception as e:
             print(f"Error al cargar estilo: {e}")
 
     def guardar(self):
         try:
-            datos = {
-                "fg": self.fg,
-                "bg": self.bg,
-                "font": list(self.font)
-            }
-            with open(self.archivo, "w") as f:
-                json.dump(datos, f, indent=4)
+            conn = sqlite3.connect(self.archivo)
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO configuracion (id, fg, bg, font_name, font_size)
+                VALUES (1, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    fg = excluded.fg,
+                    bg = excluded.bg,
+                    font_name = excluded.font_name,
+                    font_size = excluded.font_size
+            """, (self.fg, self.bg, self.font[0], self.font[1]))
+            conn.commit()
+            conn.close()
             print("Configuración guardada exitosamente")
         except Exception as e:
             print(f"Error al guardar el estilo: {e}")
 
+
     def aplicar(self, widget):
+        # Aplicar estilos a widgets de Tkinter
         opciones = widget.configure()
+
+        # Para widgets estándar de Tkinter
         if "fg" in opciones:
-            try: widget.config(fg=self.fg)
-            except: pass
+            try:
+                widget.config(fg=self.fg)
+            except Exception as e:
+                print(f"Error al aplicar fg: {e}")
         if "bg" in opciones:
-            try: widget.config(bg=self.bg)
-            except: pass
+            try:
+                widget.config(bg=self.bg)
+            except Exception as e:
+                print(f"Error al aplicar bg: {e}")
         if "font" in opciones:
-            try: widget.config(font=self.font)
-            except: pass
+            try:
+                widget.config(font=self.font)
+            except Exception as e:
+                print(f"Error al aplicar font: {e}")
+
+        # Para widgets ttk
+        if isinstance(widget, ttk.Widget):  # Si es un widget de ttk
+            self.aplicar_estilo_global()
+
+        # Aplicar a los hijos del widget (si los tiene)
         for hijo in widget.winfo_children():
             self.aplicar(hijo)
+
+    def aplicar_estilo_global(self):
+        """
+        Configura un estilo global para los widgets de ttk.
+        Esto incluye Label, Button, Entry, Treeview, Notebook, etc.
+        """
+        # Crear una instancia de Style
+        style = ttk.Style()
+
+        # Definir el estilo para todos los widgets de tipo ttk
+        style.configure("TButton", foreground=self.fg, background=self.bg, font=self.font)
+        style.configure("TLabel", foreground=self.fg, background=self.bg, font=self.font)
+        style.configure("TEntry", foreground=self.fg, background=self.bg, font=self.font)
+        style.configure("TTreeview", foreground=self.fg, background=self.bg, font=self.font)
+        style.configure("TNotebook", foreground=self.fg, background=self.bg, font=self.font)
+        style.configure("TNotebook.Tab", foreground=self.fg, background=self.bg, font=self.font)
+
+        # Puedes continuar configurando más widgets de ttk, como:
+        # style.configure("TCombobox", foreground=self.fg, background=self.bg, font=self.font)
+        # style.configure("TCheckbutton", foreground=self.fg, background=self.bg, font=self.font)
+        # style.configure("TRadiobutton", foreground=self.fg, background=self.bg, font=self.font)
+        # ...
+
+        # Configurar el estilo para los Treeview (usando tags)
+        style.map("TTreeview",
+                  foreground=[("selected", "white")],
+                  background=[("selected", "blue")])
+
+        # Los cambios de estilo se aplican globalmente
 
 class MenuConfiguracion:
     def __init__(self, root):
@@ -61,7 +113,6 @@ class MenuConfiguracion:
         
 
         self.root.title("Configuración")
-        self.root.geometry("500x400")
         # Fuentes disponibles
         self.fuentes = sorted(list(tkfont.families()))
 

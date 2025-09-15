@@ -1,10 +1,11 @@
 import sqlite3
 from datetime import datetime
+from libreria.config import db
 
 def generar_recibo(venta_id):
 
 
-    conn = sqlite3.connect("stock.db")
+    conn = sqlite3.connect(db)
     cursor = conn.cursor()
 
     # Obtener los detalles de la venta

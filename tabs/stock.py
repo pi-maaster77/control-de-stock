@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
+from libreria.config import db
 
 class Stock(ttk.Frame):
     def __init__(self, notebook):
@@ -51,7 +52,7 @@ class Stock(ttk.Frame):
                 nueva_cantidad = int(cantidad_entry.get())
                 nuevo_umbral = int(umbral_entry.get())
                 nuevo_margen = float(margen_entry.get())
-                conncection = sqlite3.connect("stock.db")
+                conncection = sqlite3.connect(db)
                 cursor = conncection.cursor()
                 cursor.execute("""UPDATE producto 
                                 SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=?, margen=?
@@ -100,7 +101,7 @@ class Stock(ttk.Frame):
         tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
     
     def actualizar_stock_tab(self):
-        conncection = sqlite3.connect("stock.db")
+        conncection = sqlite3.connect(db)
         cursor = conncection.cursor()
         for i in self.stock_tree.get_children():
             self.stock_tree.delete(i)
@@ -118,7 +119,7 @@ class Stock(ttk.Frame):
                 umbral = int(umbral_entry.get())
                 margen = float(margen_entry.get())
 
-                connection = sqlite3.connect("stock.db")
+                connection = sqlite3.connect(db)
                 cursor = connection.cursor()
 
                 # 1. Insertar producto
@@ -172,6 +173,7 @@ class Stock(ttk.Frame):
         tk.Label(top, text="Umbral:").pack()
         umbral_entry = tk.Entry(top)
         umbral_entry.pack()
+        umbral_entry.insert(0, "6")  # Valor por defecto del margen
 
         tk.Label(top, text="Margen:").pack()
         margen_entry = tk.Entry(top)
@@ -197,7 +199,7 @@ class Stock(ttk.Frame):
             return
 
         try:
-            conn = sqlite3.connect("stock.db")
+            conn = sqlite3.connect(db)
             cursor = conn.cursor()
 
             for item_id in seleccion:

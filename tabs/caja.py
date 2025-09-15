@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
-
+from libreria.config import db
 
 class Caja(ttk.Frame):
     def __init__(self, notebook):
@@ -27,7 +27,7 @@ class Caja(ttk.Frame):
 
     def actualizar_total(self):
         try:
-            conn = sqlite3.connect("stock.db")
+            conn = sqlite3.connect(db)
             cursor = conn.cursor()
             cursor.execute("SELECT total FROM dinero WHERE id=1")
             result = cursor.fetchone()
@@ -41,8 +41,9 @@ class Caja(ttk.Frame):
 
     def modificar_total(self):
         try:
+            self.autenticar()
             nuevo_total = float(self.total_var.get())
-            conn = sqlite3.connect("stock.db")
+            conn = sqlite3.connect(db)
             cursor = conn.cursor()
             cursor.execute("UPDATE dinero SET total=? WHERE id=1", (nuevo_total,))
             conn.commit()
@@ -51,6 +52,8 @@ class Caja(ttk.Frame):
             messagebox.showinfo("Éxito", "Total actualizado correctamente")
         except ValueError:
             messagebox.showerror("Error", "Ingrese un valor numérico válido")
+        except LoginError as e:
+            messagebox.showerror("Error", "Fallo de autenticacion")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo actualizar el total: {e}")
 
@@ -63,8 +66,9 @@ class Caja(ttk.Frame):
     def _modificar_monto(self, signo):
         def confirmar():
             try:
+                self.autenticar()
                 monto = float(entry.get())
-                conn = sqlite3.connect("stock.db")
+                conn = sqlite3.connect(db)
                 cursor = conn.cursor()
                 cursor.execute("UPDATE dinero SET total = total + ? WHERE id=1", (signo * monto,))
                 conn.commit()
@@ -73,6 +77,8 @@ class Caja(ttk.Frame):
                 popup.destroy()
             except ValueError:
                 messagebox.showerror("Error", "Ingrese un valor válido")
+            except LoginError as e:
+                messagebox.showerror("Error", "Fallo de autenticacion")
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo modificar el dinero: {e}")
 
@@ -83,3 +89,43 @@ class Caja(ttk.Frame):
         entry.pack(padx=10, pady=5)
         ttk.Button(popup, text="Confirmar", command=confirmar).pack(padx=10, pady=10)
         entry.focus()
+    
+    def autenticar(self):
+        def confirmar():
+            nonlocal autenticado
+
+            connection = sqlite3.connect(db)
+            cursor = connection.cursor()
+            cursor.execute("SELECT passwd FROM configuracion WHERE id=1")
+            passwd = cursor.fetchone()[0]
+            connection.close()
+
+            if not entry.get():
+                messagebox.showerror("Error", "Ingrese una contraseña")
+            elif entry.get() != passwd:
+                popup.destroy()
+            else:
+                autenticado = True
+                popup.destroy()
+
+        autenticado = False
+        popup = tk.Toplevel(self)
+        popup.title("Autenticar")
+        popup.grab_set()  # bloquea otras ventanas hasta que se cierre esta
+        ttk.Label(popup, text="Contraseña: ").pack(padx=10, pady=5)
+        entry = ttk.Entry(popup, show="*")  # oculta la contraseña
+        entry.pack(padx=10, pady=5)
+        ttk.Button(popup, text="Confirmar", command=confirmar).pack(padx=10, pady=10)
+        entry.focus()
+        self.wait_window(popup)  # espera a que la ventana se cierre
+
+        if not autenticado:
+            self.actualizar_total()
+            raise LoginError()
+        
+        return True
+
+
+class LoginError(Exception):
+    def __init__(self):
+        super().__init__("Error de autenticacion")
