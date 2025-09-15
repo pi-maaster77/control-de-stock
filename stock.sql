@@ -42,6 +42,14 @@ CREATE TABLE IF NOT EXISTS compra_detalle (
     FOREIGN KEY (cdb) REFERENCES producto(cdb)
 );
 
+CREATE TABLE IF NOT EXISTS vencimientos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cdb INTEGER NOT NULL,
+    cantidad INTEGER NOT NULL,
+    fecha_vencimiento DATE NOT NULL,
+    FOREIGN KEY (cdb) REFERENCES producto(cdb)
+);
+
 CREATE TABLE IF NOT EXISTS dinero (
     id INTEGER PRIMARY KEY CHECK (id = 1), --- Siempre será 1
     total REAL DEFAULT 0

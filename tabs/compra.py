@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import sqlite3
 import datetime
 from libreria.config import db
+import libreria.querry as querry
 
 class Compra(ttk.Frame):
     def __init__(self, notebook):
@@ -28,11 +29,12 @@ class Compra(ttk.Frame):
         self.compra_eliminar = ttk.Button(self.compra_button_frame, text="🗑️", command=self.eliminar, width=2, state="disabled")
         self.compra_eliminar.pack(side="left", padx=5, pady=5)
 
-        self.compra_tree = ttk.Treeview(self, columns=("ID", "Producto", "Precio", "Cantidad"), show="headings")
+        self.compra_tree = ttk.Treeview(self, columns=("ID", "Producto", "Precio", "Cantidad", "Vencimiento"), show="headings")
         self.compra_tree.heading("ID", text="Código de Barras")
         self.compra_tree.heading("Producto", text="Producto")
         self.compra_tree.heading("Precio", text="Precio Compra")
         self.compra_tree.heading("Cantidad", text="Cantidad")
+        self.compra_tree.heading("Vencimiento", text="Proximo Vencimiento")
         self.compra_tree.pack(fill="both", expand=True)
 
         self.compra_total_frame = ttk.Frame(self)
@@ -53,45 +55,72 @@ class Compra(ttk.Frame):
         self.compra_resultado.config(text=f"Total: ${self.total:.2f}")
 
     def confirmar(self):
-        conn = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES)
+        # use centralized connection helper with WAL and busy timeout
+        conn = querry.get_connection(db)
         cursor = conn.cursor()
 
-        cursor.execute("INSERT INTO compra (fecha) VALUES (?)", (datetime.datetime.now(),))
-        compra_id = cursor.lastrowid
+        try:
+            cursor.execute("INSERT INTO compra (fecha) VALUES (?)", (datetime.datetime.now(),))
+            compra_id = cursor.lastrowid
 
-        for item_id in self.compra_tree.get_children():
-            values = self.compra_tree.item(item_id)['values']
+            for item_id in self.compra_tree.get_children():
+                values = self.compra_tree.item(item_id)['values']
+                try:
+                    cdb = int(values[0])
+                    precio_compra = float(values[2])
+                    cantidad = int(values[3])
+                    vencimiento = values[4] if values[4] != "N/A" else None
+
+                    cursor.execute("SELECT cantidad, precio FROM producto WHERE cdb=?", (cdb,))
+                    result = cursor.fetchone()
+
+                    if vencimiento:
+                        # debe guardarse vencimiento como datetime.date
+                        if isinstance(vencimiento, str):
+                            try:
+                                fecha_de_vencimiento = datetime.datetime.strptime(vencimiento, "%d-%m-%Y").date()
+                            except ValueError:
+                                messagebox.showerror("Error", "Formato de fecha inválido. Use DD-MM-YYYY.")
+                                continue
+                        else:
+                            fecha_de_vencimiento = vencimiento
+                        # Insertar en tabla de vencimientos
+                        cursor.execute("INSERT INTO vencimientos (cdb, cantidad, fecha_vencimiento) VALUES (?, ?, ?)", 
+                                       (cdb, cantidad, fecha_de_vencimiento))
+                    if result:
+                        cantidad_actual, precio_actual = result
+                        nueva_cantidad = cantidad_actual + cantidad
+                        cursor.execute("UPDATE producto SET cantidad=? WHERE cdb=?", (nueva_cantidad, cdb))
+
+                        # Actualizar el precio si es distinto
+                        if abs(precio_actual - precio_compra) > 0.01:
+                            cursor.execute("UPDATE producto SET precio=? WHERE cdb=?", (precio_compra, cdb))
+                    else:
+                        messagebox.showerror("Error", f"Producto no existe: {cdb}")
+                        continue
+
+                    cursor.execute("INSERT INTO compra_detalle (compra, cdb, cantidad, precio_compra) VALUES (?, ?, ?, ?)", 
+                                   (compra_id, cdb, cantidad, precio_compra))
+
+                    cursor.execute("UPDATE dinero SET total = total - ? WHERE id = 1", (precio_compra * cantidad,))
+
+                except Exception as e:
+                    # log and continue with other items
+                    messagebox.showerror("Error", f"Error al procesar item {values}: {e}")
+
+            # commit all changes at the end of processing
+            conn.commit()
+        except Exception as e:
             try:
-                cdb = int(values[0])
-                nombre = values[1]
-                precio_compra = float(values[2])
-                cantidad = int(values[3])
-
-                cursor.execute("SELECT cantidad, precio FROM producto WHERE cdb=?", (cdb,))
-                result = cursor.fetchone()
-
-                if result:
-                    cantidad_actual, precio_actual = result
-                    nueva_cantidad = cantidad_actual + cantidad
-                    cursor.execute("UPDATE producto SET cantidad=? WHERE cdb=?", (nueva_cantidad, cdb))
-
-                    # Actualizar el precio si es distinto
-                    if abs(precio_actual - precio_compra) > 0.01:
-                        cursor.execute("UPDATE producto SET precio=? WHERE cdb=?", (precio_compra, cdb))
-                else:
-                    messagebox.showerror("Error", f"Producto no existe: {cdb}")
-                    continue
-
-                cursor.execute("INSERT INTO compra_detalle (compra, cdb, cantidad, precio_compra) VALUES (?, ?, ?, ?)", 
-                               (compra_id, cdb, cantidad, precio_compra))
-
-                cursor.execute("UPDATE dinero SET total = total - ? WHERE id = 1", (precio_compra * cantidad,))
-
-                conn.commit()
-            except Exception as e:
-                messagebox.showerror("Error", f"Error al registrar compra: {e}")
-
-        conn.close()
+                conn.rollback()
+            except Exception:
+                pass
+            messagebox.showerror("Error", f"Error al registrar compra: {e}")
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
         self.limpiar()
         messagebox.showinfo("Compra", "Compra registrada exitosamente.")
 
@@ -119,14 +148,18 @@ class Compra(ttk.Frame):
         precio_entry = ttk.Entry(ventana)
         precio_entry.grid(row=3, column=1, padx=5, pady=5)
 
+        ttk.Label(ventana, text="Vencimiento (DD-MM-YYYY):").grid(row=4, column=0, padx=5, pady=5)
+        vencimiento_entry = ttk.Entry(ventana)
+        vencimiento_entry.grid(row=4, column=1, padx=5, pady=5)
+
         agregar_button = ttk.Button(ventana, text="Agregar", command=lambda: agregar_a_compra())
-        agregar_button.grid(row=4, columnspan=2, padx=5, pady=5)
+        agregar_button.grid(row=5, columnspan=2, padx=5, pady=5)
         agregar_button.config(state="disabled")
 
         def buscar_producto(event=None):
             try:
                 cdb = int(cdb_entry.get())
-                conn = sqlite3.connect(db)
+                conn = querry.get_connection(db)
                 cursor = conn.cursor()
                 cursor.execute("SELECT nombre, precio FROM producto WHERE cdb=?", (cdb,))
                 result = cursor.fetchone()
@@ -154,11 +187,12 @@ class Compra(ttk.Frame):
                 cdb = int(cdb_entry.get())
                 cantidad = int(cantidad_entry.get())
                 precio = float(precio_entry.get())
+                vencimiento = vencimiento_entry.get().strip()
 
                 if cantidad <= 0 or precio <= 0:
                     raise ValueError("Cantidad y precio deben ser positivos")
 
-                self.compra_tree.insert("", "end", values=(cdb, nombre_var.get(), precio, cantidad))
+                self.compra_tree.insert("", "end", values=(cdb, nombre_var.get(), precio, cantidad, vencimiento if vencimiento else "N/A"))
                 self.total += cantidad * precio
                 self.compra_resultado.config(text=f"Total: ${self.total:.2f}")
                 ventana.destroy()
@@ -195,11 +229,25 @@ class Compra(ttk.Frame):
         precio_entry.grid(row=2, column=1, padx=5, pady=5)
         precio_entry.insert(0, precio)
 
+        ttk.Label(ventana, text="Vencimiento (DD-MM-YYYY):").grid(row=3, column=0, padx=5, pady=5)
+        vencimiento_entry = ttk.Entry(ventana)
+        vencimiento_entry.grid(row=3, column=1, padx=5, pady=5)
+        vencimiento_entry.insert(0, item['values'][4] if item['values'][4] != "N/A" else "")
+
         def guardar():
             try:
                 nueva_cantidad = int(cantidad_entry.get())
                 nuevo_precio = float(precio_entry.get())
-                self.compra_tree.item(seleccion[0], values=(cdb, nombre, nuevo_precio, nueva_cantidad))
+                nueva_fecha_vencimiento = vencimiento_entry.get().strip()
+                if nueva_fecha_vencimiento:
+                    try:
+                        fecha_de_vencimiento = datetime.datetime.strptime(nueva_fecha_vencimiento, "%d-%m-%Y").date()
+                    except ValueError:
+                        messagebox.showerror("Error", "Formato de fecha inválido. Use DD-MM-YYYY.")
+                        return
+                else:
+                    fecha_de_vencimiento = "N/A"    
+                self.compra_tree.item(seleccion[0], values=(cdb, nombre, nuevo_precio, nueva_cantidad, fecha_de_vencimiento))
                 self.recalcular_total()
                 ventana.destroy()
             except Exception as e:

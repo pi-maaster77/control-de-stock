@@ -92,6 +92,21 @@ class Venta(ttk.Frame):
 
                     cursor.execute("UPDATE producto SET cantidad=? WHERE cdb=?", (nueva_cantidad, cdb))
                     cursor.execute("INSERT INTO venta_detalle (venta, cdb, cantidad, precio_venta) VALUES (?, ?, ?, ?)", (venta_id, cdb, cantidad, precio_venta))
+                    # faltaria la parte de eliminar quitar de vencimientos si es que se vende algo
+                    cursor.execute("SELECT cantidad FROM vencimientos WHERE cdb=? ORDER BY fecha_vencimiento", (cdb,))
+                    vencimientos = cursor.fetchall()
+                    cantidad_a_restar = cantidad
+                    for vencimiento in vencimientos:
+                        if cantidad_a_restar <= 0:
+                            break
+                        cantidad_vencimiento = vencimiento[0]
+                        if cantidad_vencimiento > cantidad_a_restar:
+                            nueva_cantidad_vencimiento = cantidad_vencimiento - cantidad_a_restar
+                            cursor.execute("UPDATE vencimientos SET cantidad=? WHERE cdb=? AND fecha_vencimiento=(SELECT fecha_vencimiento FROM vencimientos WHERE cdb=? ORDER BY fecha_vencimiento LIMIT 1)", (nueva_cantidad_vencimiento, cdb, cdb))
+                            cantidad_a_restar = 0
+                        else:
+                            cursor.execute("DELETE FROM vencimientos WHERE cdb=? AND fecha_vencimiento=(SELECT fecha_vencimiento FROM vencimientos WHERE cdb=? ORDER BY fecha_vencimiento LIMIT 1)", (cdb, cdb))
+                            cantidad_a_restar -= cantidad_vencimiento
 
                     cursor.execute("UPDATE dinero SET total = total + ? WHERE id = 1", (ganancias_local,))
                     conn.commit()

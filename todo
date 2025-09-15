@@ -1,5 +1,6 @@
 Vencimientos
     - que te reste del stock si se te vence
     - que tenga un umbral donde te avise que un producto esta proximo a vencer
+    - hacer que, cuando se venda algo, se eliminen los productos con fecha de vencimiento mas proxima
 uso de varias monedas
 poner unidades
