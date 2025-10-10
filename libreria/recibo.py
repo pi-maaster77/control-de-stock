@@ -38,7 +38,7 @@ def generar_recibo(venta_id):
     recibo_content.append("Gracias por su compra!")
 
     # Guardar el recibo en un archivo de texto
-    with open(f"recibo_venta_{venta_id}.txt", "w") as f:
+    with open(f"recibos/recibo_venta_{venta_id}.txt", "w") as f:
         for line in recibo_content:
             f.write(line + "\n")
 
@@ -48,7 +48,7 @@ def generar_recibo(venta_id):
 def mostrar_recibo_en_pantalla(venta_id):
     import tkinter as tk
     try:
-        with open(f"recibo_venta_{venta_id}.txt", "r") as f:
+        with open(f"recibos/recibo_venta_{venta_id}.txt", "r") as f:
             recibo_text = f.read()
         ventana = tk.Tk()
         ventana.title(f"Recibo de Venta {venta_id}")

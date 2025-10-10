@@ -84,10 +84,10 @@ class Caja(ttk.Frame):
 
         popup = tk.Toplevel(self)
         popup.title("Agregar dinero" if signo > 0 else "Quitar dinero")
-        ttk.Label(popup, text="Monto:").pack(padx=10, pady=5)
-        entry = ttk.Entry(popup)
+        tk.Label(popup, text="Monto:").pack(padx=10, pady=5)
+        entry = tk.Entry(popup)
         entry.pack(padx=10, pady=5)
-        ttk.Button(popup, text="Confirmar", command=confirmar).pack(padx=10, pady=10)
+        tk.Button(popup, text="Confirmar", command=confirmar).pack(padx=10, pady=10)
         entry.focus()
     
     def autenticar(self):
@@ -112,10 +112,10 @@ class Caja(ttk.Frame):
         popup = tk.Toplevel(self)
         popup.title("Autenticar")
         popup.grab_set()  # bloquea otras ventanas hasta que se cierre esta
-        ttk.Label(popup, text="Contraseña: ").pack(padx=10, pady=5)
-        entry = ttk.Entry(popup, show="*")  # oculta la contraseña
+        tk.Label(popup, text="Contraseña: ").pack(padx=10, pady=5)
+        entry = tk.Entry(popup, show="*")  # oculta la contraseña
         entry.pack(padx=10, pady=5)
-        ttk.Button(popup, text="Confirmar", command=confirmar).pack(padx=10, pady=10)
+        tk.Button(popup, text="Confirmar", command=confirmar).pack(padx=10, pady=10)
         entry.focus()
         self.wait_window(popup)  # espera a que la ventana se cierre
 

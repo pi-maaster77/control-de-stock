@@ -3,21 +3,26 @@ import os
 import sqlite3
 import libreria.querry as querry
 from tkinter import ttk
-from tabs.compra import Compra
-from tabs.venta import Venta
-from tabs.stock import Stock
-from tabs.alerta import Alerta
-from tabs.reportes import Reportes
-from tabs.caja import Caja
-from confiuguracion import Estilo
+from widgets.compra import Compra
+from widgets.venta import Venta
+from widgets.stock import Stock
+from widgets.alerta import Alerta
+from widgets.reportes import Reportes
+from widgets.caja import Caja
+from libreria.confiuguracion import Estilo
+from widgets.vencimientos import Vencimientos
+from widgets.menu import Menu
 from libreria.config import db
-from tabs.vencimientos import Vencimientos
 
 root = tk.Tk()
 root.title("Gestor de Stock")
 
+root.config(menu=Menu(root))
+
 if not os.path.exists(db):
     querry.ejecutar_sql_desde_archivo(db, "stock.sql")
+
+db = "base.db"
 
 notebook = ttk.Notebook(root)
 notebook.pack(fill="both", expand=True)
@@ -29,7 +34,7 @@ compra = Compra(notebook)
 venta = Venta(notebook, alerta.actualizar_alerta_tab)
 vencimientos = Vencimientos(notebook)
 
-# Estilo().aplicar(root)
+Estilo().aplicar(root)
 
 transacciones = Reportes(notebook)
 

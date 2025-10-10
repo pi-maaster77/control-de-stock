@@ -52,4 +52,4 @@ def ejecutar_sql_desde_archivo(db, sql):
 
 
 if __name__ == "__main__":
-    ejecutar_sql_desde_archivo('stock.db', input("Nombre del archivo SQL"))
+    ejecutar_sql_desde_archivo(input("Archivo SQL: "), input("Nombre del archivo SQL"))

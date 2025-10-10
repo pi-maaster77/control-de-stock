@@ -7,6 +7,7 @@ import datetime
 from libreria.config import db
 import libreria.querry as querry
 from typing import Optional
+from libreria.product_dialog import ProductDialog
 
 class Compra(ttk.Frame):
     def __init__(self, notebook):
@@ -20,16 +21,16 @@ class Compra(ttk.Frame):
         self.compra_button_frame = ttk.Frame(self)
         self.compra_button_frame.pack(fill="x")
 
-        self.compra_actualizar = ttk.Button(self.compra_button_frame, text="📄", command=self.limpiar, width=2)
+        self.compra_actualizar = ttk.Button(self.compra_button_frame, text="📄", command=self.limpiar, )
         self.compra_actualizar.pack(side="left", padx=5, pady=5)
 
-        self.compra_anadir = ttk.Button(self.compra_button_frame, text="+", command=self.anadir, width=2)
+        self.compra_anadir = ttk.Button(self.compra_button_frame, text="+", command=self.anadir, )
         self.compra_anadir.pack(side="left", padx=5, pady=5)
 
-        self.compra_editar = ttk.Button(self.compra_button_frame, text="✏️", command=self.editar, width=2, state="disabled")
+        self.compra_editar = ttk.Button(self.compra_button_frame, text="✏️", command=self.editar, state="disabled")
         self.compra_editar.pack(side="left", padx=5, pady=5)
 
-        self.compra_eliminar = ttk.Button(self.compra_button_frame, text="🗑️", command=self.eliminar, width=2, state="disabled")
+        self.compra_eliminar = ttk.Button(self.compra_button_frame, text="🗑️", command=self.eliminar, state="disabled")
         self.compra_eliminar.pack(side="left", padx=5, pady=5)
 
         self.compra_tree = ttk.Treeview(self, columns=("ID", "Producto", "Precio", "Cantidad", "Vencimiento"), show="headings")
@@ -46,7 +47,7 @@ class Compra(ttk.Frame):
         self.compra_resultado = ttk.Label(self.compra_total_frame, text="Total: $0", font=("Arial", 14))
         self.compra_resultado.pack()
 
-        self.compra_confirmar = ttk.Button(self.compra_total_frame, text="✔", command=self.confirmar, width=2)
+        self.compra_confirmar = ttk.Button(self.compra_total_frame, text="✔", command=self.confirmar, )
         self.compra_confirmar.pack(side="left", padx=5, pady=5)
 
         self.compra_tree.bind("<<TreeviewSelect>>", self.actualizar_estado_botones)
@@ -154,105 +155,24 @@ class Compra(ttk.Frame):
         messagebox.showinfo("Compra", "Compra registrada exitosamente.")
 
     def anadir(self):
-        ventana = tk.Toplevel(self)
-        ventana.title("Añadir Producto a la Compra")
-
-        nombre_var = tk.StringVar()
-
-        ttk.Label(ventana, text="Código de Barras:").grid(row=0, column=0, padx=5, pady=5)
-        cdb_entry = ttk.Entry(ventana)
-        cdb_entry.grid(row=0, column=1, padx=5, pady=5)
-
-        ttk.Label(ventana, text="Producto:").grid(row=1, column=0, padx=5, pady=5)
-        producto_label = ttk.Label(ventana, textvariable=nombre_var)
-        producto_label.grid(row=1, column=1, padx=5, pady=5)
-
-        ttk.Label(ventana, text="Cantidad:").grid(row=2, column=0, padx=5, pady=5)
-        cantidad_entry = tk.Spinbox(ventana, from_=1, to=1000, width=5)
-        cantidad_entry.grid(row=2, column=1, padx=5, pady=5)
-        cantidad_entry.delete(0, tk.END)
-        cantidad_entry.insert(0, 1)
-
-        ttk.Label(ventana, text="Precio Compra:").grid(row=3, column=0, padx=5, pady=5)
-        precio_entry = ttk.Entry(ventana)
-        precio_entry.grid(row=3, column=1, padx=5, pady=5)
-
-        ttk.Label(ventana, text="Vencimiento:").grid(row=4, column=0, padx=5, pady=5)
-        vencimiento_entry = ttk.Entry(ventana)
-        vencimiento_entry.grid(row=4, column=1, padx=5, pady=5)
-
-        agregar_button = ttk.Button(ventana, text="Agregar", command=lambda: agregar_a_compra())
-        agregar_button.grid(row=5, columnspan=2, padx=5, pady=5)
-        agregar_button.config(state="disabled")
-
-        def buscar_producto(event=None):
+        # Use ProductDialog in 'compra' mode
+        def on_add(item):
             try:
-                cdb = int(cdb_entry.get())
-                conn = querry.get_connection(db)
-                cursor = conn.cursor()
-                cursor.execute("SELECT nombre, precio, perecedero FROM producto WHERE cdb=?", (cdb,))
-                result = cursor.fetchone()
-                conn.close()
+                # item contains cdb, nombre, precio, cantidad, perecedero, vencimiento
+                cdb = item.get('cdb')
+                nombre = item.get('nombre')
+                precio = item.get('precio')
+                cantidad = item.get('cantidad')
+                venc = item.get('vencimiento') or ""
 
-                if result:
-                    nombre, precio_actual, perecedero = result
-                    nombre_var.set(nombre)
-                    agregar_button.config(state="normal")
-
-                    precio_entry.delete(0, tk.END)
-                    precio_entry.insert(0, f"{precio_actual:.2f}")
-
-                    if perecedero:
-                        vencimiento_entry.config(state="normal")
-                    else:
-                        try:
-                            vencimiento_entry.delete(0, tk.END)
-                        except Exception:
-                            pass
-                        vencimiento_entry.config(state="disabled")
-                else:
-                    nombre_var.set("Producto no encontrado")
-                    agregar_button.config(state="disabled")
-                    precio_entry.delete(0, tk.END)
-                    vencimiento_entry.config(state="disabled")
-            except ValueError:
-                nombre_var.set("Código inválido")
-                agregar_button.config(state="disabled")
-                precio_entry.delete(0, tk.END)
-
-        def agregar_a_compra():
-            try:
-                cdb = int(cdb_entry.get())
-                cantidad = int(cantidad_entry.get())
-                precio = float(precio_entry.get())
-
-                conn = querry.get_connection(db)
-                cursor = conn.cursor()
-                cursor.execute("SELECT perecedero FROM producto WHERE cdb=?", (cdb,))
-                row = cursor.fetchone()
-                conn.close()
-                perecedero = bool(row[0]) if row else False
-
-                vencimiento = ''
-                if perecedero:
-                    parsed_date = self._leer_fecha_desde_widget(vencimiento_entry)
-                    if not parsed_date:
-                        raise ValueError("Producto perecedero: la fecha de vencimiento es requerida.")
-                    vencimiento = parsed_date.strftime("%d-%m-%Y")
-
-                if cantidad <= 0 or precio <= 0:
-                    raise ValueError("Cantidad y precio deben ser positivos")
-
-                self.compra_tree.insert("", "end", values=(cdb, nombre_var.get(), precio, cantidad, vencimiento if vencimiento else "N/A"))
+                venc_display = venc if venc else "N/A"
+                self.compra_tree.insert("", "end", values=(cdb, nombre, precio, cantidad, venc_display))
                 self.total += cantidad * precio
                 self.compra_resultado.config(text=f"Total: ${self.total:.2f}")
-                ventana.destroy()
-            except ValueError as ve:
-                messagebox.showerror("Error", str(ve))
             except Exception as e:
-                messagebox.showerror("Error", f"Error al añadir producto: {e}")
+                messagebox.showerror("Error", f"Error al procesar producto añadido: {e}")
 
-        cdb_entry.bind("<KeyRelease>", buscar_producto)
+        ProductDialog(self, db, on_add, title="Añadir Producto a la Compra", mode="compra")
 
     def editar(self):
         seleccion = self.compra_tree.selection()

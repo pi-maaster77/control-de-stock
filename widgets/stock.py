@@ -14,13 +14,13 @@ class Stock(ttk.Frame):
         # --- Caja de botones ---
         self.stock_button_frame = ttk.Frame(self)
         self.stock_button_frame.pack(fill="x")
-        self.stock_actualizar = ttk.Button(self.stock_button_frame, text="🔃", command=self.actualizar_stock_tab, width=2)
+        self.stock_actualizar = ttk.Button(self.stock_button_frame, text="🔃", command=self.actualizar_stock_tab)
         self.stock_actualizar.pack(side="left", anchor="w", padx=5, pady=5)
-        self.stock_anadir = ttk.Button(self.stock_button_frame, text="+", command=self.anadir_stock_tab, width=2)
+        self.stock_anadir = ttk.Button(self.stock_button_frame, text="+", command=self.anadir_stock_tab)
         self.stock_anadir.pack(side="left", anchor="w", padx=5, pady=5)
-        self.stock_editar = ttk.Button(self.stock_button_frame, text="✏️", command=self.editar_stock_tab, width=2, state="disabled")
+        self.stock_editar = ttk.Button(self.stock_button_frame, text="✏️", command=self.editar_stock_tab, state="disabled")
         self.stock_editar.pack(side="left", anchor="w", padx=5, pady=5)
-        self.stock_eliminar = ttk.Button(self.stock_button_frame, text="🗑️", command=self.eliminar_stock_tab, width=2, state="disabled")
+        self.stock_eliminar = ttk.Button(self.stock_button_frame, text="🗑️", command=self.eliminar_stock_tab, state="disabled")
         self.stock_eliminar.pack(side="left", anchor="w", padx=5, pady=5)
         
         # --- Tabla ---
@@ -42,7 +42,7 @@ class Stock(ttk.Frame):
             return
 
         item = self.stock_tree.item(selected[0])
-        cdb, nombre, precio, cantidad, umbral, margen = item['values']
+        cdb, nombre, precio, cantidad, margen, umbral = item['values']
 
         def guardar():
             try:
@@ -69,52 +69,43 @@ class Stock(ttk.Frame):
         top = tk.Toplevel(self)
         top.title("Editar Producto")
 
-        tk.Label(top, text="Código de Barras:").pack()
+        tk.Label(top, text="Código de Barras:").grid(row=0, column=0, padx=5, pady=5)
         cdb_entry = tk.Entry(top)
         cdb_entry.insert(0, cdb)
-        cdb_entry.pack()
+        cdb_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Nombre:").pack()
+        tk.Label(top, text="Nombre:").grid(row=1, column=0, padx=5, pady=5)
         nombre_entry = tk.Entry(top)
         nombre_entry.insert(0, nombre)
-        nombre_entry.pack()
+        nombre_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Precio:").pack()
+        tk.Label(top, text="Precio:").grid(row=2, column=0, padx=5, pady=5)
         precio_entry = tk.Entry(top)
         precio_entry.insert(0, str(precio))
-        precio_entry.pack()
+        precio_entry.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Cantidad:").pack()
+        tk.Label(top, text="Cantidad:").grid(row=3, column=0, padx=5, pady=5)
         cantidad_entry = tk.Entry(top)
         cantidad_entry.insert(0, str(cantidad))
-        cantidad_entry.pack()
+        cantidad_entry.grid(row=3, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Umbral:").pack()
+        tk.Label(top, text="Umbral:").grid(row=4, column=0, padx=5, pady=5)
         umbral_entry = tk.Entry(top)
         umbral_entry.insert(0, str(umbral))
-        umbral_entry.pack()
+        umbral_entry.grid(row=4, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Margen:").pack()
+        tk.Label(top, text="Margen:").grid(row=5, column=0, padx=5, pady=5)
         margen_entry = tk.Entry(top)
         margen_entry.insert(0, str(margen))
-        margen_entry.pack()
+        margen_entry.grid(row=5, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Perecedero").pack()
+        tk.Label(top, text="Perecedero").grid(row=6, column=0, padx=5, pady=5)
         perecedero_var = tk.BooleanVar()
         perecedero_check = tk.Checkbutton(top, variable=perecedero_var)
-        perecedero_check.pack()
+        perecedero_check.grid(row=6, column=1, padx=5, pady=5)
         perecedero_var.set(bool(item.get('perecedero', False)))
 
-        tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
-    
-    def actualizar_stock_tab(self):
-        conncection = sqlite3.connect(db)
-        cursor = conncection.cursor()
-        for i in self.stock_tree.get_children():
-            self.stock_tree.delete(i)
-        cursor.execute("SELECT cdb, nombre, precio, cantidad, margen, umbral FROM producto")
-        for row in cursor.fetchall():
-            self.stock_tree.insert("", "end", values=row)
+        tk.Button(top, text="Guardar", command=guardar).grid(row=7, column=0, columnspan=2, padx=5, pady=5)
 
     def anadir_stock_tab(self):
         def guardar():
@@ -162,39 +153,46 @@ class Stock(ttk.Frame):
         top = tk.Toplevel(self)
         top.title("Añadir Producto")
 
-        tk.Label(top, text="Código de Barras:").pack()
+        tk.Label(top, text="Código de Barras:").grid(row=0, column=0, padx=5, pady=5)
         cdb_entry = tk.Entry(top)
-        cdb_entry.pack()
+        cdb_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Nombre:").pack()
+        tk.Label(top, text="Nombre:").grid(row=1, column=0, padx=5, pady=5)
         nombre_entry = tk.Entry(top)
-        nombre_entry.pack()
+        nombre_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Precio:").pack()
+        tk.Label(top, text="Precio:").grid(row=2, column=0, padx=5, pady=5)
         precio_entry = tk.Entry(top)
-        precio_entry.pack()
+        precio_entry.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Cantidad:").pack()
+        tk.Label(top, text="Cantidad:").grid(row=3, column=0, padx=5, pady=5)
         cantidad_entry = tk.Entry(top)
-        cantidad_entry.pack()
+        cantidad_entry.grid(row=3, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Umbral:").pack()
+        tk.Label(top, text="Umbral:").grid(row=4, column=0, padx=5, pady=5)
         umbral_entry = tk.Entry(top)
-        umbral_entry.pack()
-        umbral_entry.insert(0, "6")  # Valor por defecto del margen
+        umbral_entry.grid(row=4, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Margen:").pack()
+        tk.Label(top, text="Margen:").grid(row=5, column=0, padx=5, pady=5)
         margen_entry = tk.Entry(top)
-        margen_entry.pack()
-        margen_entry.insert(0, "0.20")  # Valor por defecto del margen
+        margen_entry.grid(row=5, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Perecedero").pack()
+        tk.Label(top, text="Perecedero").grid(row=6, column=0, padx=5, pady=5)
         perecedero_var = tk.BooleanVar()
         perecedero_check = tk.Checkbutton(top, variable=perecedero_var)
-        perecedero_check.pack()
-        perecedero_var.set(False)  # Valor por defecto
+        perecedero_check.grid(row=6, column=1, padx=5, pady=5)
 
-        tk.Button(top, text="Guardar", command=guardar).pack(pady=5)
+
+        tk.Button(top, text="Guardar", command=guardar).grid(row=7, column=0, columnspan=2, padx=5, pady=5)
+
+    def actualizar_stock_tab(self):
+        conncection = sqlite3.connect(db)
+        cursor = conncection.cursor()
+        for i in self.stock_tree.get_children():
+            self.stock_tree.delete(i)
+        cursor.execute("SELECT cdb, nombre, precio, cantidad, margen, umbral FROM producto")
+        for row in cursor.fetchall():
+            self.stock_tree.insert("", "end", values=row)
 
 
     def eliminar_stock_tab(self):

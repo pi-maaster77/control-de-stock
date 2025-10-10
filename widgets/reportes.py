@@ -13,7 +13,7 @@ class Reportes(ttk.Frame):
 
     def setup_ui(self):
         # Título
-        ttk.Label(self, text="Reporte de Ventas", font=('Arial', 14, 'bold')).pack(pady=5)
+        ttk.Label(self, text="Reporte de Ventas").pack(pady=5)
 
         # Treeview de Ventas
         self.ventas_tree = ttk.Treeview(self, columns=("ID", "Fecha", "Producto", "Cantidad", "Precio"), show="headings")
@@ -21,7 +21,7 @@ class Reportes(ttk.Frame):
             self.ventas_tree.heading(col, text=col)
         self.ventas_tree.pack(fill='x', padx=10, pady=5)
 
-        ttk.Label(self, text="Reporte de Compras", font=('Arial', 14, 'bold')).pack(pady=10)
+        ttk.Label(self, text="Reporte de Compras").pack(pady=10)
 
         # Treeview de Compras
         self.compras_tree = ttk.Treeview(self, columns=("ID", "Fecha", "Producto", "Cantidad", "Precio"), show="headings")

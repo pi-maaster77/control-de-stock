@@ -4,6 +4,7 @@ import sqlite3
 import datetime
 import libreria.recibo as recibo
 from libreria.config import db
+from libreria.product_dialog import ProductDialog
 
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat(" "))
 sqlite3.register_converter("timestamp", lambda val: datetime.datetime.fromisoformat(val.decode()))
@@ -22,16 +23,16 @@ class Venta(ttk.Frame):
         self.ventas_button_frame = ttk.Frame(self)
         self.ventas_button_frame.pack(fill="x")
 
-        self.ventas_actualizar = ttk.Button(self.ventas_button_frame, text="📄", command=self.limpiar, width=2)
+        self.ventas_actualizar = ttk.Button(self.ventas_button_frame, text="📄", command=self.limpiar, )
         self.ventas_actualizar.pack(side="left", padx=5, pady=5)
 
-        self.ventas_anadir = ttk.Button(self.ventas_button_frame, text="+", command=self.anadir, width=2)
+        self.ventas_anadir = ttk.Button(self.ventas_button_frame, text="+", command=self.anadir, )
         self.ventas_anadir.pack(side="left", padx=5, pady=5)
 
-        self.ventas_editar = ttk.Button(self.ventas_button_frame, text="✏️", command=self.editar, width=2, state="disabled")
+        self.ventas_editar = ttk.Button(self.ventas_button_frame, text="✏️", command=self.editar, state="disabled")
         self.ventas_editar.pack(side="left", padx=5, pady=5)
 
-        self.ventas_eliminar = ttk.Button(self.ventas_button_frame, text="🗑️", command=self.eliminar, width=2, state="disabled")
+        self.ventas_eliminar = ttk.Button(self.ventas_button_frame, text="🗑️", command=self.eliminar, state="disabled")
         self.ventas_eliminar.pack(side="left", padx=5, pady=5)
 
         self.ventas_tree = ttk.Treeview(self, columns=("ID", "Producto", "Precio", "Cantidad"), show="headings")
@@ -47,7 +48,7 @@ class Venta(ttk.Frame):
         self.venta_resultado = ttk.Label(self.ventas_vender_frame, text="Total: $0", font=("Arial", 14))
         self.venta_resultado.pack()
 
-        self.ventas_vender = ttk.Button(self.ventas_vender_frame, text="✔", command=self.vender, width=2)
+        self.ventas_vender = ttk.Button(self.ventas_vender_frame, text="✔", command=self.vender, )
         self.ventas_vender.pack(side="left", padx=5, pady=5)
 
         self.ventas_tree.bind("<<TreeviewSelect>>", self.actualizar_estado_botones)
@@ -124,91 +125,17 @@ class Venta(ttk.Frame):
         self.funalerta()
 
     def anadir(self):
-        anadir_ventana = tk.Toplevel(self)
-        anadir_ventana.title("Añadir Producto a la Venta")
-
-        nombre_var = tk.StringVar()
-        stock_maximo = tk.IntVar(value=1000)
-
-        ttk.Label(anadir_ventana, text="Código de Barras:").grid(row=0, column=0, padx=5, pady=5)
-        cdb_entry = ttk.Entry(anadir_ventana)
-        cdb_entry.grid(row=0, column=1, padx=5, pady=5)
-
-        ttk.Label(anadir_ventana, text="Producto:").grid(row=1, column=0, padx=5, pady=5)
-        producto_label = ttk.Label(anadir_ventana, textvariable=nombre_var)
-        producto_label.grid(row=1, column=1, padx=5, pady=5)
-
-        ttk.Label(anadir_ventana, text="Cantidad:").grid(row=2, column=0, padx=5, pady=5)
-        cantidad_entry = tk.Spinbox(anadir_ventana, from_=1, to=1, width=5)
-        cantidad_entry.grid(row=2, column=1, padx=5, pady=5)
-        cantidad_entry.delete(0, tk.END)
-        cantidad_entry.insert(0, 1)
-
-        agregar_button = ttk.Button(anadir_ventana, text="Agregar", command=lambda: agregar_a_venta())
-        agregar_button.grid(row=3, columnspan=2, padx=5, pady=5)
-        agregar_button.config(state="disabled")
-
-        def buscar_producto(event=None):
+        # Use the reusable ProductDialog. Provide a callback to receive the selected item.
+        def on_add(item):
+            # item: {'cdb', 'nombre', 'precio_venta', 'cantidad'}
             try:
-                cdb = int(cdb_entry.get())
-                conn = sqlite3.connect(db)
-                cursor = conn.cursor()
-                cursor.execute("SELECT nombre, precio, cantidad, margen FROM producto WHERE cdb=?", (cdb,))
-                result = cursor.fetchone()
-                conn.close()
-
-                if result:
-                    nombre, precio, cantidad_disponible, margen = result
-                    precio_venta = precio * (1 + margen)
-                    nombre_var.set(nombre)
-                    stock_maximo.set(cantidad_disponible)
-
-                    # Actualizar Spinbox para limitar cantidad permitida
-                    cantidad_entry.config(to=cantidad_disponible)
-                    cantidad_entry.delete(0, tk.END)
-                    cantidad_entry.insert(0, 1)
-
-                    agregar_button.config(state="normal")
-                else:
-                    nombre_var.set("Producto no encontrado")
-                    cantidad_entry.config(to=1)
-                    cantidad_entry.delete(0, tk.END)
-                    cantidad_entry.insert(0, 1)
-                    agregar_button.config(state="disabled")
-            except ValueError:
-                nombre_var.set("Código inválido")
-                agregar_button.config(state="disabled")
-
-        def agregar_a_venta():
-            try:
-                cdb = int(cdb_entry.get())
-                cantidad = int(cantidad_entry.get())
-
-                if not (1 <= cantidad <= stock_maximo.get()):
-                    raise ValueError("La cantidad debe estar dentro del stock disponible")
-
-                conn = sqlite3.connect(db)
-                cursor = conn.cursor()
-                cursor.execute("SELECT nombre, precio, margen FROM producto WHERE cdb=?", (cdb,))
-                result = cursor.fetchone()
-                conn.close()
-
-                if result:
-                    nombre, precio, margen = result
-                    precio_venta = precio * (1 + margen)
-                    self.ventas_tree.insert("", "end", values=(cdb, nombre, precio_venta, cantidad))
-                    anadir_ventana.destroy()
-                    self.total += precio_venta * cantidad
-                    self.venta_resultado.config(text=f"Total: ${self.total:.2f}")
-                else:
-                    messagebox.showerror("Error", "Producto no encontrado")
-            except ValueError as ve:
-                messagebox.showerror("Error", str(ve))
+                self.ventas_tree.insert("", "end", values=(item['cdb'], item['nombre'], item['precio_venta'], item['cantidad']))
+                self.total += item['precio_venta'] * item['cantidad']
+                self.venta_resultado.config(text=f"Total: ${self.total:.2f}")
             except Exception as e:
-                messagebox.showerror("Error", f"Error al añadir producto: {e}")
+                messagebox.showerror("Error", f"Error al procesar el producto añadido: {e}")
 
-        # Evento cuando se suelta una tecla en el campo de código de barras
-        cdb_entry.bind("<KeyRelease>", buscar_producto)
+        ProductDialog(self, db, on_add, title="Añadir Producto a la Venta")
 
     def editar(self):
         seleccion = self.ventas_tree.selection()
