@@ -2,14 +2,14 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import datetime
 import libreria.querry as querry
-from libreria.config import db
 from libreria.product_dialog import ProductDialog
 
 
 class Vencimientos(ttk.Frame):
     """Pestaña para mostrar productos próximos a vencer y gestionar vencimientos."""
-    def __init__(self, notebook):
+    def __init__(self, notebook, db):
         super().__init__(notebook)
+        self.db = db
         self.frame = self
         self._rowid_map = {}  # map tree iid -> rowid in sqlite
         self.setup_ui()
@@ -51,7 +51,7 @@ class Vencimientos(ttk.Frame):
     def actualizar(self):
         """Carga los vencimientos desde la base de datos y los muestra en la tabla."""
         try:
-            conn = querry.get_connection(db)
+            conn = querry.get_connection(self.db)
             cur = conn.cursor()
             cur.execute("SELECT rowid, cdb, cantidad, fecha_vencimiento FROM vencimientos ORDER BY fecha_vencimiento NULLS LAST")
             rows = cur.fetchall()
@@ -59,7 +59,7 @@ class Vencimientos(ttk.Frame):
         except Exception:
             # fallback simple query without ordering nuance
             try:
-                conn = querry.get_connection(db)
+                conn = querry.get_connection(self.db)
                 cur = conn.cursor()
                 cur.execute("SELECT rowid, cdb, cantidad, fecha_vencimiento FROM vencimientos")
                 rows = cur.fetchall()
@@ -91,7 +91,7 @@ class Vencimientos(ttk.Frame):
             # lookup product name
             nombre = ''
             try:
-                conn2 = querry.get_connection(db)
+                conn2 = querry.get_connection(self.db)
                 cur2 = conn2.cursor()
                 cur2.execute("SELECT nombre FROM producto WHERE cdb=?", (cdb,))
                 res = cur2.fetchone()
@@ -115,7 +115,7 @@ class Vencimientos(ttk.Frame):
                 venc_txt = item.get('vencimiento') or ''
 
                 fecha = self._parse_fecha_text(venc_txt)
-                conn = querry.get_connection(db)
+                conn = querry.get_connection(self.db)
                 cur = conn.cursor()
                 if fecha:
                     cur.execute("INSERT INTO vencimientos (cdb, cantidad, fecha_vencimiento) VALUES (?, ?, ?)",
@@ -129,7 +129,7 @@ class Vencimientos(ttk.Frame):
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo agregar vencimiento: {e}")
 
-        ProductDialog(self, db, on_add, title="Añadir Vencimiento", mode="vencimiento")
+        ProductDialog(self, self.db, on_add, title="Añadir Vencimiento", mode="vencimiento")
 
     def _parse_fecha_text(self, text):
         """Parsea fechas tolerantes y devuelve datetime.date o None."""
@@ -163,7 +163,7 @@ class Vencimientos(ttk.Frame):
 
         # traer datos desde la base de datos usando rowid
         try:
-            conn = querry.get_connection(db)
+            conn = querry.get_connection(self.db)
             cur = conn.cursor()
             cur.execute(
                 "SELECT v.cdb, p.nombre, v.cantidad, v.fecha_vencimiento FROM vencimientos v LEFT JOIN producto p ON p.cdb = v.cdb WHERE v.rowid = ?",
@@ -224,7 +224,7 @@ class Vencimientos(ttk.Frame):
                 except Exception:
                     nombre_var.set("")
                     return
-                conn = querry.get_connection(db)
+                conn = querry.get_connection(self.db)
                 cur = conn.cursor()
                 cur.execute("SELECT nombre, perecedero FROM producto WHERE cdb=?", (cdb_int,))
                 res = cur.fetchone()
@@ -264,7 +264,7 @@ class Vencimientos(ttk.Frame):
                     guardar_btn.config(state='disabled')
                     return
 
-                conn = querry.get_connection(db)
+                conn = querry.get_connection(self.db)
                 cur = conn.cursor()
                 cur.execute("SELECT nombre, perecedero FROM producto WHERE cdb=?", (cdb_int,))
                 prod = cur.fetchone()
@@ -318,7 +318,7 @@ class Vencimientos(ttk.Frame):
 
     def _guardar_edicion(self, rowid, cdb, cantidad, fecha, ventana):
         try:
-            conn = querry.get_connection(db)
+            conn = querry.get_connection(self.db)
             cur = conn.cursor()
 
             # normalize inputs
@@ -361,7 +361,7 @@ class Vencimientos(ttk.Frame):
             return
 
         try:
-            conn = querry.get_connection(db)
+            conn = querry.get_connection(self.db)
             cur = conn.cursor()
             for iid in sel:
                 rowid = self._rowid_map.get(iid)

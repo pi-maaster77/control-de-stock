@@ -3,7 +3,6 @@ from tkinter import ttk, messagebox
 import sqlite3
 import datetime
 import libreria.recibo as recibo
-from libreria.config import db
 from libreria.product_dialog import ProductDialog
 
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat(" "))
@@ -11,8 +10,9 @@ sqlite3.register_converter("timestamp", lambda val: datetime.datetime.fromisofor
 
 
 class Venta(ttk.Frame):
-    def __init__(self, notebook, funalerta):
+    def __init__(self, notebook, funalerta, db):
         super().__init__(notebook)
+        self.db = db
         self.frame = self
         self.funalerta = funalerta
         self.total = 0
@@ -45,7 +45,7 @@ class Venta(ttk.Frame):
         self.ventas_vender_frame = ttk.Frame(self)
         self.ventas_vender_frame.pack(fill="x")
 
-        self.venta_resultado = ttk.Label(self.ventas_vender_frame, text="Total: $0", font=("Arial", 14))
+        self.venta_resultado = ttk.Label(self.ventas_vender_frame, text="Total: $0.00")
         self.venta_resultado.pack()
 
         self.ventas_vender = ttk.Button(self.ventas_vender_frame, text="✔", command=self.vender, )
@@ -60,7 +60,7 @@ class Venta(ttk.Frame):
         self.venta_resultado.config(text=f"Total: ${self.total:.2f}")
 
     def vender(self):
-        conn = sqlite3.connect(db, detect_types=sqlite3.PARSE_DECLTYPES)
+        conn = sqlite3.connect(self.db, detect_types=sqlite3.PARSE_DECLTYPES)
         cursor = conn.cursor()
 
         """
@@ -121,7 +121,7 @@ class Venta(ttk.Frame):
         conn.close()
         self.venta_resultado.config(text=f"Ganancia: ${self.total:.2f}")
         self.limpiar()
-        recibo.generar_recibo(venta_id)
+        recibo.generar_recibo(venta_id, self.db)
         self.funalerta()
 
     def anadir(self):
@@ -135,7 +135,7 @@ class Venta(ttk.Frame):
             except Exception as e:
                 messagebox.showerror("Error", f"Error al procesar el producto añadido: {e}")
 
-        ProductDialog(self, db, on_add, title="Añadir Producto a la Venta")
+        ProductDialog(self, self.db, on_add, title="Añadir Producto a la Venta")
 
     def editar(self):
         seleccion = self.ventas_tree.selection()
@@ -154,7 +154,7 @@ class Venta(ttk.Frame):
 
         # Consultar stock desde la base de datos
         try:
-            conn = sqlite3.connect(db)
+            conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
             cursor.execute("SELECT cantidad FROM producto WHERE cdb=?", (cdb,))
             result = cursor.fetchone()

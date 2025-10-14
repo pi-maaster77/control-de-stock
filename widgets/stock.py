@@ -2,11 +2,11 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
-from libreria.config import db
 
 class Stock(ttk.Frame):
-    def __init__(self, notebook):
+    def __init__(self, notebook, db):
         super().__init__(notebook)
+        self.db = db
         self.frame = self
         self.setup_ui()
         notebook.add(self.frame, text="Stock")
@@ -53,7 +53,7 @@ class Stock(ttk.Frame):
                 nuevo_umbral = int(umbral_entry.get())
                 nuevo_margen = float(margen_entry.get())
                 nuevo_perecedero = perecedero_var.get()
-                conncection = sqlite3.connect(db)
+                conncection = sqlite3.connect(self.db)
                 cursor = conncection.cursor()
                 cursor.execute("""UPDATE producto 
                                 SET cdb=?, nombre=?, precio=?, cantidad=?, umbral=?, margen=?, perecedero=?
@@ -118,7 +118,7 @@ class Stock(ttk.Frame):
                 margen = float(margen_entry.get())
                 perecedero = perecedero_var.get()
 
-                connection = sqlite3.connect(db)
+                connection = sqlite3.connect(self.db)
                 cursor = connection.cursor()
 
                 # 1. Insertar producto
@@ -186,7 +186,7 @@ class Stock(ttk.Frame):
         tk.Button(top, text="Guardar", command=guardar).grid(row=7, column=0, columnspan=2, padx=5, pady=5)
 
     def actualizar_stock_tab(self):
-        conncection = sqlite3.connect(db)
+        conncection = sqlite3.connect(self.db)
         cursor = conncection.cursor()
         for i in self.stock_tree.get_children():
             self.stock_tree.delete(i)
@@ -211,7 +211,7 @@ class Stock(ttk.Frame):
             return
 
         try:
-            conn = sqlite3.connect(db)
+            conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
 
             for item_id in seleccion:

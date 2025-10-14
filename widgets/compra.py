@@ -2,17 +2,15 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
-
-
-from libreria.config import db
 import libreria.querry as querry
 from typing import Optional
 from libreria.product_dialog import ProductDialog
 
 class Compra(ttk.Frame):
-    def __init__(self, notebook):
+    def __init__(self, notebook, db):
         super().__init__(notebook)
         self.frame = self
+        self.db = db
         self.total = 0
         self.setup_ui()
         notebook.add(self.frame, text="Compra")
@@ -44,7 +42,7 @@ class Compra(ttk.Frame):
         self.compra_total_frame = ttk.Frame(self)
         self.compra_total_frame.pack(fill="x")
 
-        self.compra_resultado = ttk.Label(self.compra_total_frame, text="Total: $0", font=("Arial", 14))
+        self.compra_resultado = ttk.Label(self.compra_total_frame, text="Total: $0.00")
         self.compra_resultado.pack()
 
         self.compra_confirmar = ttk.Button(self.compra_total_frame, text="✔", command=self.confirmar, )
@@ -96,7 +94,7 @@ class Compra(ttk.Frame):
                 return None
 
     def confirmar(self):
-        conn = querry.get_connection(db)
+        conn = querry.get_connection(self.db)
         cursor = conn.cursor()
 
         try:
@@ -172,7 +170,7 @@ class Compra(ttk.Frame):
             except Exception as e:
                 messagebox.showerror("Error", f"Error al procesar producto añadido: {e}")
 
-        ProductDialog(self, db, on_add, title="Añadir Producto a la Compra", mode="compra")
+        ProductDialog(self, self.db, on_add, title="Añadir Producto a la Compra", mode="compra")
 
     def editar(self):
         seleccion = self.compra_tree.selection()

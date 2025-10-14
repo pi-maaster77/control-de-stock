@@ -3,23 +3,16 @@ import tkinter.font as tkfont
 from tkinter import ttk
 from tkinter.colorchooser import askcolor
 import sqlite3
-from libreria.config import db
 
 class Estilo:
-    def __init__(self, archivo=db):
-        self.archivo = archivo
-
-        # Valores por defecto
-        self.fg = "#000000"
-        self.bg = "#FFFFFF"
-        self.font = ("Arial", 12)
-
+    def __init__(self, db):
+        self.db = db
         self.cargar()
 
     def cargar(self):
         """Carga la configuración del estilo desde la base de datos."""
         try:
-            conn = sqlite3.connect(self.archivo)
+            conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
             cursor.execute("SELECT fg, bg, font_name, font_size FROM configuracion WHERE id = 1")
             row = cursor.fetchone()
@@ -37,7 +30,7 @@ class Estilo:
     def guardar(self):
         """Guarda la configuración del estilo en la base de datos."""
         try:
-            conn = sqlite3.connect(self.archivo)
+            conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO configuracion (id, fg, bg, font_name, font_size)
@@ -145,9 +138,10 @@ class Estilo:
                     self.aplicar(ventana)
 
 class MenuConfiguracion:
-    def __init__(self, root):
+    def __init__(self, root, db):
         self.root = root
-        self.estilo = Estilo()
+        self.db = db
+        self.estilo = Estilo(self.db)
         
 
         self.root.title("Configuración")
@@ -234,13 +228,3 @@ class MenuConfiguracion:
 
         self.estilo.aplicar(self.root)
         self.estilo.guardar()
-
-
-# Crear ventana principal
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    estilo = Estilo()
-    estilo.aplicar(root)  # ✅ APLICAR los estilos cargados al inicio
-    MenuConfiguracion(root)
-    root.mainloop()

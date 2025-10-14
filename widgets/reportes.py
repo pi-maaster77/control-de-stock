@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
-from libreria.config import db
 
 class Reportes(ttk.Frame):
-    def __init__(self, notebook):
+    def __init__(self, notebook, db):
         super().__init__(notebook)
+        self.db = db
         self.frame = self
         self.setup_ui()
         self.actualizar()
@@ -35,7 +35,7 @@ class Reportes(ttk.Frame):
         for i in self.compras_tree.get_children():
             self.compras_tree.delete(i)
         try:
-            conn = sqlite3.connect(db)  # Reemplaza con tu archivo .db
+            conn = sqlite3.connect(self.db)  # Reemplaza con tu archivo .db
             cursor = conn.cursor()
 
             # --- Cargar ventas ---

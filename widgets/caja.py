@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
-from libreria.config import db
 
 class Caja(ttk.Frame):
-    def __init__(self, notebook):
+    def __init__(self, notebook, db):
         super().__init__(notebook)
+        self.db = db
         self.frame = self
         self.total_var = tk.StringVar()
         self.setup_ui()
@@ -13,8 +13,8 @@ class Caja(ttk.Frame):
         notebook.add(self.frame, text="Caja")
 
     def setup_ui(self):
-        ttk.Label(self, text="Total en caja:", font=("Arial", 14)).pack(pady=10)
-        self.total_entry = ttk.Entry(self, textvariable=self.total_var, font=("Arial", 14), justify="center", width=20)
+        ttk.Label(self, text="Total en caja:").pack(pady=10)
+        self.total_entry = ttk.Entry(self, textvariable=self.total_var, justify="center", width=20)
         self.total_entry.pack(pady=5)
 
         botones_frame = ttk.Frame(self)
@@ -27,7 +27,7 @@ class Caja(ttk.Frame):
 
     def actualizar_total(self):
         try:
-            conn = sqlite3.connect(db)
+            conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
             cursor.execute("SELECT total FROM dinero WHERE id=1")
             result = cursor.fetchone()
@@ -43,7 +43,7 @@ class Caja(ttk.Frame):
         try:
             self.autenticar()
             nuevo_total = float(self.total_var.get())
-            conn = sqlite3.connect(db)
+            conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
             cursor.execute("UPDATE dinero SET total=? WHERE id=1", (nuevo_total,))
             conn.commit()
@@ -68,7 +68,7 @@ class Caja(ttk.Frame):
             try:
                 self.autenticar()
                 monto = float(entry.get())
-                conn = sqlite3.connect(db)
+                conn = sqlite3.connect(self.db)
                 cursor = conn.cursor()
                 cursor.execute("UPDATE dinero SET total = total + ? WHERE id=1", (signo * monto,))
                 conn.commit()
@@ -94,10 +94,11 @@ class Caja(ttk.Frame):
         def confirmar():
             nonlocal autenticado
 
-            connection = sqlite3.connect(db)
+            connection = sqlite3.connect(self.db)
             cursor = connection.cursor()
             cursor.execute("SELECT passwd FROM configuracion WHERE id=1")
             passwd = cursor.fetchone()[0]
+            print(passwd)
             connection.close()
 
             if not entry.get():
@@ -124,7 +125,6 @@ class Caja(ttk.Frame):
             raise LoginError()
         
         return True
-
 
 class LoginError(Exception):
     def __init__(self):

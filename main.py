@@ -2,7 +2,7 @@ import tkinter as tk
 import os
 import sqlite3
 import libreria.querry as querry
-from tkinter import ttk
+from tkinter import ttk, filedialog
 from widgets.compra import Compra
 from widgets.venta import Venta
 from widgets.stock import Stock
@@ -12,40 +12,39 @@ from widgets.caja import Caja
 from libreria.confiuguracion import Estilo
 from widgets.vencimientos import Vencimientos
 from widgets.menu import Menu
-from libreria.config import db
 
-root = tk.Tk()
-root.title("Gestor de Stock")
+class Main(tk.Tk):
+    def __init__(self, db=None):
+        super().__init__()
+        self.db = db
+        self.config(menu=Menu(self, db))
+        if db == None:
+            pass
+        else:
+            self.iniciar_interfaz()
+        self.title("Gestor de Stock")
+        self.mainloop()
 
-root.config(menu=Menu(root))
+    def iniciar_interfaz(self):
+        self.notebook = ttk.Notebook(self)
+        self.notebook.pack(fill="both", expand=True)
 
-if not os.path.exists(db):
-    querry.ejecutar_sql_desde_archivo(db, "stock.sql")
+        self.caja = Caja(self.notebook, self.db)
+        self.stock = Stock(self.notebook, self.db)
+        self.alerta = Alerta(self.notebook, self.db)
+        self.compra = Compra(self.notebook, self.db)
+        self.venta = Venta(self.notebook, self.alerta.actualizar_alerta_tab, self.db)
+        self.vencimientos = Vencimientos(self.notebook, self.db)
+        self.transacciones = Reportes(self.notebook, self.db)
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
+        Estilo(self.db).aplicar(self)
 
-db = "base.db"
-
-notebook = ttk.Notebook(root)
-notebook.pack(fill="both", expand=True)
-
-caja = Caja(notebook)
-stock = Stock(notebook)
-alerta = Alerta(notebook)
-compra = Compra(notebook)
-venta = Venta(notebook, alerta.actualizar_alerta_tab)
-vencimientos = Vencimientos(notebook)
-
-Estilo().aplicar(root)
-
-transacciones = Reportes(notebook)
-
-def on_tab_change(event):
-    stock.actualizar_stock_tab()
-    alerta.actualizar_alerta_tab()
-    transacciones.actualizar()
-    caja.actualizar_total()
-    vencimientos.actualizar()
-
-notebook.bind("<<NotebookTabChanged>>", on_tab_change)
-
-
-root.mainloop()
+    def on_tab_change(self, event):
+        self.stock.actualizar_stock_tab()
+        self.alerta.actualizar_alerta_tab()
+        self.transacciones.actualizar()
+        self.caja.actualizar_total()
+        self.vencimientos.actualizar()
+         
+if __name__ == "__main__":
+    Main()

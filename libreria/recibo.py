@@ -1,8 +1,7 @@
 import sqlite3
 from datetime import datetime
-from libreria.config import db
 
-def generar_recibo(venta_id):
+def generar_recibo(venta_id, db):
 
 
     conn = sqlite3.connect(db)

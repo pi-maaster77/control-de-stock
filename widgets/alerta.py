@@ -2,12 +2,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 from libreria.notificacion import notificar
-from libreria.config import db
 import libreria.querry as querry
 
 class Alerta(ttk.Frame):
-    def __init__(self, notebook):
+    def __init__(self, notebook, db):
         super().__init__(notebook)
+        self.db = db
         self.frame = self
         self.setup_ui()
         self.previo = None
@@ -20,7 +20,7 @@ class Alerta(ttk.Frame):
         self.alerta_tree.heading("Umbral", text="Umbral")
         self.alerta_tree.pack(fill="both", expand=True)
     def actualizar_alerta_tab(self):
-        conn = querry.get_connection(db)
+        conn = querry.get_connection(self.db)
         cursor = conn.cursor()
         try:
             # clear the tree view
@@ -74,6 +74,3 @@ class Alerta(ttk.Frame):
                 conn.close()
             except Exception:
                 pass
-
-
-
