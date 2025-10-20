@@ -21,11 +21,16 @@ class Menu(tk.Menu):
         self.add_cascade(label="Archivo", menu=archivo)
 
     def menu_configuracion(self):
-        root = tk.Tk()
+        # Abrir una ventana hija en lugar de crear una nueva raíz
+        top = tk.Toplevel(self.master)
         estilo = Estilo(self.db)
-        estilo.aplicar(root)  # ✅ APLICAR los estilos cargados al inicio
-        MenuConfiguracion(root, self.db)
-        root.mainloop()
+        # aplicar estilos a la raíz principal asegura coherencia; aplicamos también al Toplevel
+        try:
+            Estilo(self.db).aplicar(self.master)
+            estilo.aplicar(top)
+        except Exception:
+            pass
+        MenuConfiguracion(top, self.db)
 
 
     def nuevo(self):

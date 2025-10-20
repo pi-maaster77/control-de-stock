@@ -1,8 +1,5 @@
 import tkinter as tk
-import os
-import sqlite3
-import libreria.querry as querry
-from tkinter import ttk, filedialog
+from tkinter import ttk
 from widgets.compra import Compra
 from widgets.venta import Venta
 from widgets.stock import Stock
@@ -26,6 +23,12 @@ class Main(tk.Tk):
         self.mainloop()
 
     def iniciar_interfaz(self):
+        # Aplicar estilos antes de crear widgets para que ttk los herede correctamente
+        try:
+            Estilo(self.db).aplicar(self)
+        except Exception:
+            pass
+
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True)
 
@@ -37,7 +40,6 @@ class Main(tk.Tk):
         self.vencimientos = Vencimientos(self.notebook, self.db)
         self.transacciones = Reportes(self.notebook, self.db)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
-        Estilo(self.db).aplicar(self)
 
     def on_tab_change(self, event):
         self.stock.actualizar_stock_tab()

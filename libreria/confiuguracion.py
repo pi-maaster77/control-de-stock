@@ -7,6 +7,13 @@ import sqlite3
 class Estilo:
     def __init__(self, db):
         self.db = db
+        # Valores por defecto (evitan errores si la BD está vacía o falta)
+        self.fg = "#000000"
+        self.bg = "#FFFFFF"
+        # tomar una fuente por defecto razonable
+        self.font = ("TkDefaultFont", 10)
+        # marca para evitar reconfigurar repetidamente dentro de la misma llamada
+        self._ultima_aplicacion_id = None
         self.cargar()
 
     def cargar(self):
@@ -19,12 +26,19 @@ class Estilo:
             conn.close()
 
             if row:
-                self.fg = row[0] or self.fg
-                self.bg = row[1] or self.bg
-                font_name = row[2] or self.font[0]
+                # Solo actualizar si hay valores válidos en la BD
+                if row[0]:
+                    self.fg = row[0]
+                if row[1]:
+                    self.bg = row[1]
+                if row[2]:
+                    font_name = row[2]
+                else:
+                    font_name = self.font[0]
                 font_size = row[3] if row[3] is not None else self.font[1]
                 self.font = (font_name, font_size)
         except Exception as e:
+            # No interrumpir la ejecución: mantener valores por defecto
             print(f"Error al cargar estilo: {e}")
 
     def guardar(self):
@@ -49,86 +63,124 @@ class Estilo:
 
     def aplicar(self, widget):
         """Aplica los colores y fuente al widget y sus hijos."""
-        opciones = widget.configure()
+        # Aplicar estilos globales de ttk (una sola vez por ejecución de aplicar)
+        try:
+            # crear un id simple para evitar reentrada infinita si se llama recursivamente
+            current_id = id(widget)
+            if self._ultima_aplicacion_id != current_id:
+                self.aplicar_estilo_global()
+                self._ultima_aplicacion_id = current_id
+        except Exception:
+            # no bloquear si algo falla aquí
+            pass
 
-        # --- Widgets estándar de Tkinter ---
-        if "fg" in opciones:
-            try:
-                widget.config(fg=self.fg)
-            except Exception:
-                pass
-        if "bg" in opciones:
-            try:
-                widget.config(bg=self.bg)
-            except Exception:
-                pass
-        if "font" in opciones:
-            try:
-                widget.config(font=self.font)
-            except Exception:
-                pass
+        # --- Aplicar a widgets "clásicos" de Tkinter mediante configure() ---
+        try:
+            opciones = widget.configure()
+        except Exception:
+            opciones = {}
 
-        # --- Widgets ttk ---
-        if isinstance(widget, ttk.Widget):
-            self.aplicar_estilo_global()
+        if isinstance(opciones, dict):
+            if "fg" in opciones:
+                try:
+                    widget.config(fg=self.fg)
+                except Exception:
+                    pass
+            if "bg" in opciones:
+                try:
+                    widget.config(bg=self.bg)
+                except Exception:
+                    pass
+            if "font" in opciones:
+                try:
+                    widget.config(font=self.font)
+                except Exception:
+                    pass
 
-        # --- Aplicar a los hijos ---
+        # No intentar forzar propiedades en widgets ttk; el estilo global los maneja.
+
+        # --- Aplicar recursivamente a los hijos ---
         for hijo in widget.winfo_children():
+            # evitar reaplicar estilo global en cada nodo, la función anterior ya lo hizo
             self.aplicar(hijo)
 
     def aplicar_estilo_global(self):
         """Define estilos globales para ttk (con borde visible y hover punteado)."""
-        style = ttk.Style()
-        style.theme_use("clam")
+        try:
+            style = ttk.Style()
+        except Exception as e:
+            print(f"No se pudo crear ttk.Style(): {e}")
+            return
 
-        # === Estilos base ===
-        style.configure(
-            ".", 
-            background=self.bg, 
-            foreground=self.fg, 
-            font=self.font
-        )
+        # Seleccionar un tema disponible (clam suele existir). Si no, usar el primero.
+        try:
+            temas = style.theme_names()
+            if "clam" in temas:
+                style.theme_use("clam")
+            else:
+                style.theme_use(temas[0])
+        except Exception as e:
+            print(f"No se pudo establecer el tema ttk: {e}")
 
         # Estilos comunes
+        # Etiquetas, entradas y notebooks
         style.configure("TLabel", background=self.bg, foreground=self.fg, font=self.font)
-        style.configure("TEntry", fieldbackground=self.bg, foreground=self.fg, font=self.font)
+        # para entradas usar fieldbackground para el fondo y foreground para el texto
+        try:
+            style.configure("TEntry", fieldbackground=self.bg, foreground=self.fg, font=self.font)
+        except Exception:
+            # algunos temas o versiones pueden requerir otras opciones; ignorar si falla
+            pass
         style.configure("TNotebook", background=self.bg, borderwidth=0)
         style.configure("TNotebook.Tab", background=self.bg, foreground=self.fg, font=self.font)
-        style.configure("Treeview", background=self.bg, foreground=self.fg,
-                        fieldbackground=self.bg, font=self.font)
-        style.configure("Treeview.Heading", background=self.bg, foreground=self.fg, font=self.font)
+        try:
+            style.configure("Treeview", background=self.bg, foreground=self.fg,
+                            fieldbackground=self.bg, font=self.font)
+            style.configure("Treeview.Heading", background=self.bg, foreground=self.fg, font=self.font)
+        except Exception:
+            pass
 
         # === Botones con borde ===
         # Borde normal visible
-        style.configure(
-            "TButton",
-            background=self.bg,
-            foreground=self.fg,
-            font=self.font,
-            bordercolor=self.fg,
-            borderwidth=2,
-            relief="solid",
-            focusthickness=1,
-            focuscolor=self.fg
-        )
+        # Botones: no todos los temas admiten bordercolor/focuscolor; usar opciones comunes
+        try:
+            style.configure(
+                "TButton",
+                background=self.bg,
+                foreground=self.fg,
+                font=self.font,
+                borderwidth=1,
+                relief="raised",
+            )
+        except Exception:
+            pass
 
         # === Mapas dinámicos (reacciones a estados) ===
         # Sin cambios de color, pero con borde punteado al pasar el mouse
-        style.map(
-            "TButton",
-            background=[("active", self.bg), ("pressed", self.bg), ("disabled", self.bg)],
-            foreground=[("active", self.fg), ("pressed", self.fg), ("disabled", self.fg)],
-            relief=[("pressed", "ridge"), ("active", "groove"), ("!active", "solid")],
-            bordercolor=[("active", self.fg), ("disabled", self.fg)],
-        )
+        try:
+            style.map(
+                "TButton",
+                background=[("active", self.bg), ("pressed", self.bg), ("disabled", self.bg)],
+                foreground=[("active", self.fg), ("pressed", self.fg), ("disabled", self.fg)],
+                relief=[("pressed", "sunken"), ("active", "raised")],
+            )
+        except Exception:
+            pass
 
         # === Otros elementos (mantienen coherencia visual) ===
-        style.map("TNotebook.Tab",
-                  background=[("selected", self.bg), ("active", self.bg)],
-                  foreground=[("selected", self.fg), ("active", self.fg)])
-        style.map("TEntry",
-                  fieldbackground=[("disabled", self.bg)],
-                  foreground=[("disabled", self.fg)])
+        try:
+            style.map("TNotebook.Tab",
+                      background=[("selected", self.bg), ("active", self.bg)],
+                      foreground=[("selected", self.fg), ("active", self.fg)])
+        except Exception:
+            pass
+
+        try:
+            style.map("TEntry",
+                      fieldbackground=[("disabled", self.bg)],
+                      foreground=[("disabled", self.fg)])
+        except Exception:
+            pass
     def aplicar_a_todas_las_ventanas(self):
         """Aplica el estilo a todas las ventanas (Tk y Toplevel)."""
         root = tk._default_root
