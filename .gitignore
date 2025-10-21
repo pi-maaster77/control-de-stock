@@ -4,7 +4,12 @@ widgets/__pycache__
 *.pyo
 *.pyd
 
-stock.db*
+*.db*
+
 settings.txt
+last.txt
 
 recibo_venta_*.txt
+
+
+.venv
