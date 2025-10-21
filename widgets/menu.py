@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
-from libreria.confiuguracion import MenuConfiguracion, Estilo
+from libreria.configuracion import MenuConfiguracion
+from libreria.estilo import Estilo
 from libreria.querry import ejecutar_sql_desde_archivo
 
 class Menu(tk.Menu):

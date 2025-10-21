@@ -6,7 +6,7 @@ from widgets.stock import Stock
 from widgets.alerta import Alerta
 from widgets.reportes import Reportes
 from widgets.caja import Caja
-from libreria.confiuguracion import Estilo
+from libreria.estilo import Estilo
 from widgets.vencimientos import Vencimientos
 from widgets.menu import Menu
 
