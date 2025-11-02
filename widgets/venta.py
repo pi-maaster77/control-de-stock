@@ -4,6 +4,7 @@ import sqlite3
 import datetime
 import libreria.recibo as recibo
 from libreria.product_dialog import ProductDialog
+from libreria.boton import * 
 
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat(" "))
 sqlite3.register_converter("timestamp", lambda val: datetime.datetime.fromisoformat(val.decode()))
@@ -23,16 +24,16 @@ class Venta(ttk.Frame):
         self.ventas_button_frame = ttk.Frame(self)
         self.ventas_button_frame.pack(fill="x")
 
-        self.ventas_actualizar = ttk.Button(self.ventas_button_frame, text="📄", command=self.limpiar, )
+        self.ventas_actualizar = Boton(self.ventas_button_frame, tipo=BLANCO, command=self.limpiar, )
         self.ventas_actualizar.pack(side="left", padx=5, pady=5)
 
-        self.ventas_anadir = ttk.Button(self.ventas_button_frame, text="+", command=self.anadir, )
+        self.ventas_anadir = Boton(self.ventas_button_frame, tipo=AGREGAR, command=self.anadir, )
         self.ventas_anadir.pack(side="left", padx=5, pady=5)
 
-        self.ventas_editar = ttk.Button(self.ventas_button_frame, text="✏️", command=self.editar, state="disabled")
+        self.ventas_editar = Boton(self.ventas_button_frame, tipo=EDITAR, command=self.editar, state="disabled")
         self.ventas_editar.pack(side="left", padx=5, pady=5)
 
-        self.ventas_eliminar = ttk.Button(self.ventas_button_frame, text="🗑️", command=self.eliminar, state="disabled")
+        self.ventas_eliminar = Boton(self.ventas_button_frame, tipo=ELIMINAR, command=self.eliminar, state="disabled")
         self.ventas_eliminar.pack(side="left", padx=5, pady=5)
 
         self.ventas_tree = ttk.Treeview(self, columns=("ID", "Producto", "Precio", "Cantidad"), show="headings")

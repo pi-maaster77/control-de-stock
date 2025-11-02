@@ -1,16 +1,14 @@
---!SQLITE3
-
+-- Activar claves foráneas
 PRAGMA foreign_keys = ON;
 
-
 CREATE TABLE IF NOT EXISTS producto (
-    cdb INTEGER PRIMARY KEY, --- Código de barras 
-    nombre TEXT NOT NULL, --- Nombre del producto
-    precio REAL NOT NULL, --- Precio del producto
-    cantidad INTEGER DEFAULT 0, --- Cantidad en stock
-    umbral INTEGER DEFAULT 0, --- Umbral de stock para alertas
-    margen REAL DEFAULT 0.20, --- Margen de ganancia
-    perecedero BOOLEAN DEFAULT 0 --- Si es perecedero o no
+    cdb INTEGER PRIMARY KEY, -- Código de barras 
+    nombre TEXT NOT NULL, -- Nombre del producto
+    precio REAL NOT NULL, -- Precio del producto
+    cantidad INTEGER DEFAULT 0, -- Cantidad en stock
+    umbral INTEGER DEFAULT 0, -- Umbral de stock para alertas
+    margen REAL DEFAULT 0.20, -- Margen de ganancia
+    perecedero BOOLEAN DEFAULT 0 -- Si es perecedero o no
 );
 
 CREATE TABLE IF NOT EXISTS venta (
@@ -24,8 +22,8 @@ CREATE TABLE IF NOT EXISTS venta_detalle (
     cantidad INTEGER NOT NULL,
     precio_venta REAL,
     venta INTEGER,
-    FOREIGN KEY (venta) REFERENCES venta(id),
-    FOREIGN KEY (cdb) REFERENCES producto(cdb)
+    FOREIGN KEY (venta) REFERENCES venta(id) ON DELETE CASCADE,
+    FOREIGN KEY (cdb) REFERENCES producto(cdb) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS compra (
@@ -39,8 +37,8 @@ CREATE TABLE IF NOT EXISTS compra_detalle (
     cantidad INTEGER NOT NULL,
     precio_compra REAL,
     compra INTEGER,
-    FOREIGN KEY (compra) REFERENCES compra(id),
-    FOREIGN KEY (cdb) REFERENCES producto(cdb)
+    FOREIGN KEY (compra) REFERENCES compra(id) ON DELETE CASCADE,
+    FOREIGN KEY (cdb) REFERENCES producto(cdb) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS vencimientos (
@@ -48,34 +46,22 @@ CREATE TABLE IF NOT EXISTS vencimientos (
     cdb INTEGER NOT NULL,
     cantidad INTEGER NOT NULL,
     fecha_vencimiento DATE NOT NULL,
-    FOREIGN KEY (cdb) REFERENCES producto(cdb)
+    FOREIGN KEY (cdb) REFERENCES producto(cdb) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS dinero (
-    id INTEGER PRIMARY KEY CHECK (id = 1), --- Siempre será 1
+    id INTEGER PRIMARY KEY CHECK (id = 1), -- Siempre será 1
     total REAL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS configuracion (
     id INTEGER PRIMARY KEY CHECK (id = 1),
-    fg TEXT,
-    bg TEXT,
     font_name TEXT,
-    font_size INTEGER
+    font_size INTEGER,
+    passwd TEXT
 );
 
-INSERT INTO dinero (id, total) VALUES(1, 0);
-
-CREATE TABLE IF NOT EXISTS configuracion (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-    fg TEXT,
-    bg TEXT,
-    passwd TEXT, -- ni idea de por que no inserta esta columna, pero bueno
-    font_name TEXT,
-    font_size INTEGER
-);
-
-ALTER TABLE configuracion ADD COLUMN passwd TEXT; -- atada con alambre
-
-INSERT INTO configuracion (id, fg, bg, font_name, font_size, passwd) 
-    VALUES (1, '#000000', '#FFFFFF', 'Arial', '12', '12341234')
+-- Insertar registros iniciales (solo si no existen)
+INSERT OR IGNORE INTO dinero (id, total) VALUES (1, 0);
+INSERT OR IGNORE INTO configuracion (id, font_name, font_size, passwd)
+VALUES (1, 'Arial', 12, '12341234');

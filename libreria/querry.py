@@ -1,6 +1,4 @@
 import sqlite3
-import os
-
 
 def get_connection(db_path: str):
     """Return a sqlite3 connection with sensible pragmas for concurrent GUI use.
@@ -8,7 +6,6 @@ def get_connection(db_path: str):
     Sets journal_mode=WAL and a busy timeout so short concurrent bursts don't fail.
     Caller must close the connection.
     """
-    need_init_wal = not os.path.exists(db_path)
     conn = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES, timeout=5.0)
     try:
         cur = conn.cursor()

@@ -2,14 +2,14 @@ import tkinter as tk
 import tkinter.font as tkfont
 from tkinter import ttk
 from tkinter.colorchooser import askcolor
-from libreria.estilo import Estilo
-import sqlite3
+# from libreria.estilo import Estilo
+
 
 class MenuConfiguracion:
     def __init__(self, root, db):
         self.root = root
         self.db = db
-        self.estilo = Estilo(self.db)
+        # self.estilo = Estilo(self.db)
         
 
         self.root.title("Configuración")
@@ -58,7 +58,7 @@ class MenuConfiguracion:
         # === Botón aplicar ===
         tk.Button(self.root, text="Aplicar configuración", bg="#d9d9d9", command=self.aplicar).pack(pady=10)
 
-        self.estilo.aplicar(self.root)  # Aplicar estilos cargados
+        # self.estilo.aplicar(self.root)  # Aplicar estilos cargados
         self.actualizar_estilo()
         
 
@@ -90,9 +90,9 @@ class MenuConfiguracion:
             fuente = self.fuentes[0]
         tamano = int(self.tamano_var.get())
 
-        self.estilo.fg = self.color_fuente
-        self.estilo.bg = self.color_fondo
-        self.estilo.font = (fuente, tamano)
-
-        self.estilo.aplicar(self.root)
-        self.estilo.guardar()
+        # self.estilo.fg = self.color_fuente
+        # self.estilo.bg = self.color_fondo
+        # self.estilo.font = (fuente, tamano)
+ 
+        # self.estilo.aplicar(self.root)
+        # self.estilo.guardar()

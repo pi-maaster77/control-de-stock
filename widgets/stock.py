@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 import datetime
+from libreria.boton import *
+
 
 class Stock(ttk.Frame):
     def __init__(self, notebook, db):
@@ -14,13 +16,13 @@ class Stock(ttk.Frame):
         # --- Caja de botones ---
         self.stock_button_frame = ttk.Frame(self)
         self.stock_button_frame.pack(fill="x")
-        self.stock_actualizar = ttk.Button(self.stock_button_frame, text="🔃", command=self.actualizar_stock_tab)
+        self.stock_actualizar = Boton(self.stock_button_frame, tipo=ACTUALIZAR, command=self.actualizar_stock_tab)
         self.stock_actualizar.pack(side="left", anchor="w", padx=5, pady=5)
-        self.stock_anadir = ttk.Button(self.stock_button_frame, text="+", command=self.anadir_stock_tab)
+        self.stock_anadir = Boton(self.stock_button_frame, tipo=AGREGAR, command=self.anadir_stock_tab)
         self.stock_anadir.pack(side="left", anchor="w", padx=5, pady=5)
-        self.stock_editar = ttk.Button(self.stock_button_frame, text="✏️", command=self.editar_stock_tab, state="disabled")
+        self.stock_editar = Boton(self.stock_button_frame, tipo=EDITAR, command=self.editar_stock_tab, state="disabled")
         self.stock_editar.pack(side="left", anchor="w", padx=5, pady=5)
-        self.stock_eliminar = ttk.Button(self.stock_button_frame, text="🗑️", command=self.eliminar_stock_tab, state="disabled")
+        self.stock_eliminar = Boton(self.stock_button_frame, tipo=ELIMINAR, command=self.eliminar_stock_tab, state="disabled")
         self.stock_eliminar.pack(side="left", anchor="w", padx=5, pady=5)
         
         # --- Tabla ---

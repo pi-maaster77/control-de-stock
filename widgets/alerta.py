@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-import sqlite3
+from tkinter import ttk
 from libreria.notificacion import notificar
 import libreria.querry as querry
 

@@ -5,6 +5,7 @@ import datetime
 import libreria.querry as querry
 from typing import Optional
 from libreria.product_dialog import ProductDialog
+from libreria.boton import *
 
 class Compra(ttk.Frame):
     def __init__(self, notebook, db):
@@ -19,16 +20,16 @@ class Compra(ttk.Frame):
         self.compra_button_frame = ttk.Frame(self)
         self.compra_button_frame.pack(fill="x")
 
-        self.compra_actualizar = ttk.Button(self.compra_button_frame, text="📄", command=self.limpiar, )
-        self.compra_actualizar.pack(side="left", padx=5, pady=5)
+        self.compra_blanco = Boton(self.compra_button_frame, tipo=BLANCO, command=self.limpiar, )
+        self.compra_blanco.pack(side="left", padx=5, pady=5)
 
-        self.compra_anadir = ttk.Button(self.compra_button_frame, text="+", command=self.anadir, )
+        self.compra_anadir = Boton(self.compra_button_frame, tipo=AGREGAR, command=self.anadir, )
         self.compra_anadir.pack(side="left", padx=5, pady=5)
 
-        self.compra_editar = ttk.Button(self.compra_button_frame, text="✏️", command=self.editar, state="disabled")
+        self.compra_editar = Boton(self.compra_button_frame, tipo=EDITAR, command=self.editar, state="disabled")
         self.compra_editar.pack(side="left", padx=5, pady=5)
 
-        self.compra_eliminar = ttk.Button(self.compra_button_frame, text="🗑️", command=self.eliminar, state="disabled")
+        self.compra_eliminar = Boton(self.compra_button_frame, tipo=ELIMINAR, command=self.eliminar, state="disabled")
         self.compra_eliminar.pack(side="left", padx=5, pady=5)
 
         self.compra_tree = ttk.Treeview(self, columns=("ID", "Producto", "Precio", "Cantidad", "Vencimiento"), show="headings")

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 from libreria.configuracion import MenuConfiguracion
-from libreria.estilo import Estilo
+# from libreria.estilo import Estilo
 from libreria.querry import ejecutar_sql_desde_archivo
 
 class Menu(tk.Menu):
@@ -24,13 +24,13 @@ class Menu(tk.Menu):
     def menu_configuracion(self):
         # Abrir una ventana hija en lugar de crear una nueva raíz
         top = tk.Toplevel(self.master)
-        estilo = Estilo(self.db)
+        # estilo = Estilo(self.db)
         # aplicar estilos a la raíz principal asegura coherencia; aplicamos también al Toplevel
-        try:
-            Estilo(self.db).aplicar(self.master)
-            estilo.aplicar(top)
-        except Exception:
-            pass
+        # try:
+            # Estilo(self.db).aplicar(self.master)
+            # estilo.aplicar(top)
+        # except Exception:
+        #     pass
         MenuConfiguracion(top, self.db)
 
 
@@ -40,10 +40,14 @@ class Menu(tk.Menu):
             ejecutar_sql_desde_archivo(archivo, "stock.sql")
             from main import Main
             Main(archivo) 
+            with open("last.txt", "w") as f:
+                f.write(archivo)
         else:
             messagebox.showerror("Archivo no seleccionado")
     def abrir(self):
         archivo = filedialog.askopenfilename(title="Abrir", defaultextension=".db", filetypes=[("Base sqlite", "*.db")])
         if archivo:
             from main import Main
-            Main(archivo) 
+            Main(archivo)
+            with open("last.txt", "w") as f:
+                f.write(archivo)

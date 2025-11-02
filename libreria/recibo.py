@@ -42,24 +42,3 @@ def generar_recibo(venta_id, db):
             f.write(line + "\n")
 
     conn.close()
-    mostrar_recibo_en_pantalla(venta_id)
-
-def mostrar_recibo_en_pantalla(venta_id):
-    import tkinter as tk
-    try:
-        with open(f"recibos/recibo_venta_{venta_id}.txt", "r") as f:
-            recibo_text = f.read()
-        # Usar la raíz por defecto si existe, sino crear un Toplevel
-        root = tk._default_root
-        if root is None:
-            ventana = tk.Toplevel()
-        else:
-            ventana = tk.Toplevel(root)
-        ventana.title(f"Recibo de Venta {venta_id}")
-        text_area = tk.Text(ventana, wrap='word', font=('Courier',12))
-        text_area.insert(tk.END, recibo_text)
-        text_area.config(state=tk.DISABLED)
-        text_area.pack(expand=True, fill='both')
-        # No ejecutar mainloop en Toplevel; el loop principal ya corre en la aplicación
-    except FileNotFoundError:
-        print("Recibo no encontrado.")

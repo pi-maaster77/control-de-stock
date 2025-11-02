@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 import datetime
 import libreria.querry as querry
 from libreria.product_dialog import ProductDialog
-
+from libreria.boton import *
 
 class Vencimientos(ttk.Frame):
     """Pestaña para mostrar productos próximos a vencer y gestionar vencimientos."""
@@ -20,16 +20,16 @@ class Vencimientos(ttk.Frame):
         btn_frame = ttk.Frame(self)
         btn_frame.pack(fill="x")
 
-        self.btn_actualizar = ttk.Button(btn_frame, text="🔃", command=self.actualizar)
+        self.btn_actualizar = Boton(btn_frame, tipo=ACTUALIZAR, command=self.actualizar)
         self.btn_actualizar.pack(side="left", padx=5, pady=5)
 
-        self.btn_anadir = ttk.Button(btn_frame, text="+", command=self.anadir)
+        self.btn_anadir = Boton(btn_frame, tipo=AGREGAR, command=self.anadir)
         self.btn_anadir.pack(side="left", padx=5, pady=5)
 
-        self.btn_editar = ttk.Button(btn_frame, text="✏️", command=self.editar, state="disabled")
+        self.btn_editar = Boton(btn_frame, tipo=EDITAR, command=self.editar, state="disabled")
         self.btn_editar.pack(side="left", padx=5, pady=5)
 
-        self.btn_eliminar = ttk.Button(btn_frame, text="🗑️", command=self.eliminar, state="disabled")
+        self.btn_eliminar = Boton(btn_frame, tipo=ELIMINAR, command=self.eliminar, state="disabled")
         self.btn_eliminar.pack(side="left", padx=5, pady=5)
 
         # tabla

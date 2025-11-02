@@ -6,7 +6,6 @@ from widgets.stock import Stock
 from widgets.alerta import Alerta
 from widgets.reportes import Reportes
 from widgets.caja import Caja
-from libreria.estilo import Estilo
 from widgets.vencimientos import Vencimientos
 from widgets.menu import Menu
 
@@ -14,21 +13,32 @@ class Main(tk.Tk):
     def __init__(self, db=None):
         super().__init__()
         self.db = db
-        self.config(menu=Menu(self, db))
-        if db == None:
-            pass
+        
+        if self.db is None:
+            try:
+                with open("last.txt", "r") as f:
+                    self.db = f.read().strip()  # Remove any whitespace/newlines
+                self.iniciar_interfaz()
+            except Exception as e:
+                print("E24: Error reading last.txt -", e)
         else:
             self.iniciar_interfaz()
+
+        self.config(menu=Menu(self, self.db))
+
         self.title("Gestor de Stock")
         self.mainloop()
 
     def iniciar_interfaz(self):
-        # Aplicar estilos antes de crear widgets para que ttk los herede correctamente
+        # from libreria.estilo import Estilo
+        # Crear y aplicar estilos usando nuestra clase Estilo
+        """        
         try:
-            Estilo(self.db).aplicar(self)
-        except Exception:
-            pass
-
+            estilo = Estilo(self.db)
+            estilo.aplicar(self)
+        except Exception as e:
+            print("ERROR al aplicar estilo:", e)
+        """
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(fill="both", expand=True)
 
@@ -40,6 +50,7 @@ class Main(tk.Tk):
         self.vencimientos = Vencimientos(self.notebook, self.db)
         self.transacciones = Reportes(self.notebook, self.db)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
+        
 
     def on_tab_change(self, event):
         self.stock.actualizar_stock_tab()
