@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+import ttkbootstrap as tb
 import sqlite3
 
 """
@@ -23,7 +24,18 @@ class ProductDialog:
         self.price_calc = price_calc or self._default_price_calc
         self.mode = mode  # 'venta' or 'compra'
 
-        self.top = tk.Toplevel(parent)
+        # Intenta heredar el tema de la ventana principal si es posible
+        # Si parent es una ventana ttkbootstrap, usa su themename
+        themename = None
+        if hasattr(parent, 'style') and hasattr(parent.style, 'theme'):
+            try:
+                themename = parent.style.theme.name
+            except Exception:
+                pass
+        if themename:
+            self.top = tb.Toplevel(parent, themename=themename)
+        else:
+            self.top = tb.Toplevel(parent)
         self.top.title(title)
 
         self.nombre_var = tk.StringVar()
@@ -41,7 +53,7 @@ class ProductDialog:
         self.cantidad_entry = tk.Spinbox(self.top, from_=1, to=1, width=5)
         self.cantidad_entry.grid(row=2, column=1, padx=5, pady=5)
         self.cantidad_entry.delete(0, tk.END)
-        self.cantidad_entry.insert(0, 1)
+        self.cantidad_entry.insert(0, '1')
 
         # If modo compra, añadir campos precio y vencimiento
         # If modo vencimiento, añadir solo vencimiento (sin precio)
@@ -135,7 +147,7 @@ class ProductDialog:
                 # update spinbox limit
                 self.cantidad_entry.config(to=cantidad_disponible or 1)
                 self.cantidad_entry.delete(0, tk.END)
-                self.cantidad_entry.insert(0, 1)
+                self.cantidad_entry.insert(0, '1')
 
                 # If compra mode, prefill price and enable/disable vencimiento
                 if self.mode == "compra":
@@ -183,7 +195,7 @@ class ProductDialog:
                 self.nombre_var.set("Producto no encontrado")
                 self.cantidad_entry.config(to=1)
                 self.cantidad_entry.delete(0, tk.END)
-                self.cantidad_entry.insert(0, 1)
+                self.cantidad_entry.insert(0, '1')
                 self.agregar_button.config(state="disabled")
         except Exception as e:
             self.nombre_var.set(f"Error: {e}")

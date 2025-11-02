@@ -64,4 +64,4 @@ CREATE TABLE IF NOT EXISTS configuracion (
 -- Insertar registros iniciales (solo si no existen)
 INSERT OR IGNORE INTO dinero (id, total) VALUES (1, 0);
 INSERT OR IGNORE INTO configuracion (id, font_name, font_size, passwd)
-VALUES (1, 'Arial', 12, '12341234');
+VALUES (1, 'Arial', 12, '');

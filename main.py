@@ -1,4 +1,4 @@
-import ttkbootstrap as tb
+import ttkbootstrap as tb # pip install ttkbootstrap. Funciona como tkinter pero con temas modernos
 from widgets.compra import Compra
 from widgets.venta import Venta
 from widgets.stock import Stock
@@ -11,7 +11,7 @@ from widgets.menu import Menu
 
 class Main(tb.Window):
     def __init__(self, db=None):
-        super().__init__(themename="darkly")  # Puedes cambiar "darkly" por otro tema oscuro
+        super().__init__(themename="darkly")  # Tema por defecto
         self.db = db
 
         if self.db is None:
