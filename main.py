@@ -1,5 +1,4 @@
-import tkinter as tk
-from tkinter import ttk
+import ttkbootstrap as tb
 from widgets.compra import Compra
 from widgets.venta import Venta
 from widgets.stock import Stock
@@ -9,37 +8,42 @@ from widgets.caja import Caja
 from widgets.vencimientos import Vencimientos
 from widgets.menu import Menu
 
-class Main(tk.Tk):
+
+class Main(tb.Window):
     def __init__(self, db=None):
-        super().__init__()
+        super().__init__(themename="darkly")  # Puedes cambiar "darkly" por otro tema oscuro
         self.db = db
-        
+
         if self.db is None:
             try:
                 with open("last.txt", "r") as f:
-                    self.db = f.read().strip()  # Remove any whitespace/newlines
+                    self.db = f.read().strip()
                 self.iniciar_interfaz()
             except Exception as e:
                 print("E24: Error reading last.txt -", e)
         else:
             self.iniciar_interfaz()
 
+
         self.config(menu=Menu(self, self.db))
 
         self.title("Gestor de Stock")
         self.mainloop()
 
+    def cambiar_tema(self, tema):
+        self.style.theme_use(tema)
+
     def iniciar_interfaz(self):
         # from libreria.estilo import Estilo
         # Crear y aplicar estilos usando nuestra clase Estilo
-        """        
+        """
         try:
             estilo = Estilo(self.db)
             estilo.aplicar(self)
         except Exception as e:
             print("ERROR al aplicar estilo:", e)
         """
-        self.notebook = ttk.Notebook(self)
+        self.notebook = tb.Notebook(self)
         self.notebook.pack(fill="both", expand=True)
 
         self.caja = Caja(self.notebook, self.db)
@@ -50,7 +54,6 @@ class Main(tk.Tk):
         self.vencimientos = Vencimientos(self.notebook, self.db)
         self.transacciones = Reportes(self.notebook, self.db)
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
-        
 
     def on_tab_change(self, event):
         self.stock.actualizar_stock_tab()

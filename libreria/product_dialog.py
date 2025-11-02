@@ -194,7 +194,7 @@ class ProductDialog:
             cdb = int(self.cdb_entry.get())
             cantidad = int(self.cantidad_entry.get())
 
-            if not (1 <= cantidad <= self.stock_maximo.get()):
+            if not (1 <= cantidad <= self.stock_maximo.get()) and self.mode != "compra":
                 raise ValueError("La cantidad debe estar dentro del stock disponible")
 
             # fetch product info again to be safe

@@ -115,7 +115,7 @@ class Stock(ttk.Frame):
                 cdb = int(cdb_entry.get())
                 nombre = nombre_entry.get()
                 precio = float(precio_entry.get())
-                cantidad = int(cantidad_entry.get())
+                cantidad = 0
                 umbral = int(umbral_entry.get())
                 margen = float(margen_entry.get())
                 perecedero = perecedero_var.get()
@@ -167,22 +167,18 @@ class Stock(ttk.Frame):
         precio_entry = tk.Entry(top)
         precio_entry.grid(row=2, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Cantidad:").grid(row=3, column=0, padx=5, pady=5)
-        cantidad_entry = tk.Entry(top)
-        cantidad_entry.grid(row=3, column=1, padx=5, pady=5)
-
-        tk.Label(top, text="Umbral:").grid(row=4, column=0, padx=5, pady=5)
+        tk.Label(top, text="Umbral:").grid(row=3, column=0, padx=5, pady=5)
         umbral_entry = tk.Entry(top)
-        umbral_entry.grid(row=4, column=1, padx=5, pady=5)
+        umbral_entry.grid(row=3, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Margen:").grid(row=5, column=0, padx=5, pady=5)
+        tk.Label(top, text="Margen:").grid(row=4, column=0, padx=5, pady=5)
         margen_entry = tk.Entry(top)
-        margen_entry.grid(row=5, column=1, padx=5, pady=5)
+        margen_entry.grid(row=4, column=1, padx=5, pady=5)
 
-        tk.Label(top, text="Perecedero").grid(row=6, column=0, padx=5, pady=5)
+        tk.Label(top, text="Perecedero").grid(row=5, column=0, padx=5, pady=5)
         perecedero_var = tk.BooleanVar()
         perecedero_check = tk.Checkbutton(top, variable=perecedero_var)
-        perecedero_check.grid(row=6, column=1, padx=5, pady=5)
+        perecedero_check.grid(row=5, column=1, padx=5, pady=5)
 
 
         tk.Button(top, text="Guardar", command=guardar).grid(row=7, column=0, columnspan=2, padx=5, pady=5)

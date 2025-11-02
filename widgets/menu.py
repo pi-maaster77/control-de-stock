@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
-from libreria.configuracion import MenuConfiguracion
 # from libreria.estilo import Estilo
 from libreria.querry import ejecutar_sql_desde_archivo
 
@@ -11,27 +10,19 @@ class Menu(tk.Menu):
         self.setup()
     
     def setup(self):
+        top = tk.Toplevel(self.master)
         archivo = tk.Menu(self, tearoff=0)
         archivo.add_command(label="Nuevo...", command=self.nuevo)
         archivo.add_command(label="Abrir...", command=self.abrir)
+
         archivo.add_separator()
-        if self.db == None:
-            archivo.add_command(label="Configuracion", command=self.menu_configuracion, state="disabled")
-        else:
-            archivo.add_command(label="Configuracion", command=self.menu_configuracion)
+
+        archivo.add_command(label="Modo Claro", command=lambda : top.master.cambiar_tema("flatly"))
+        archivo.add_command(label="Modo Oscuro", command=lambda : top.master.cambiar_tema("darkly"))    
+
         self.add_cascade(label="Archivo", menu=archivo)
 
-    def menu_configuracion(self):
-        # Abrir una ventana hija en lugar de crear una nueva raíz
-        top = tk.Toplevel(self.master)
-        # estilo = Estilo(self.db)
-        # aplicar estilos a la raíz principal asegura coherencia; aplicamos también al Toplevel
-        # try:
-            # Estilo(self.db).aplicar(self.master)
-            # estilo.aplicar(top)
-        # except Exception:
-        #     pass
-        MenuConfiguracion(top, self.db)
+
 
 
     def nuevo(self):
