@@ -3,9 +3,12 @@ from tkinter import ttk, messagebox
 import sqlite3
 import datetime
 import libreria.querry as querry
+
 from typing import Optional
 from libreria.product_dialog import ProductDialog
+from libreria.toplevel import TopLevel
 from libreria.boton import *
+
 
 class Compra(ttk.Frame):
     def __init__(self, notebook, db):
@@ -190,7 +193,7 @@ class Compra(ttk.Frame):
             cantidad = vals[3] if len(vals) > 3 else 1
             vencimiento_val = vals[4] if len(vals) > 4 else "N/A"
 
-        ventana = tk.Toplevel(self)
+        ventana = TopLevel(self)
         ventana.title("Editar Producto")
 
         ttk.Label(ventana, text="Producto:").grid(row=0, column=0, padx=5, pady=5)

@@ -56,12 +56,13 @@ CREATE TABLE IF NOT EXISTS dinero (
 
 CREATE TABLE IF NOT EXISTS configuracion (
     id INTEGER PRIMARY KEY CHECK (id = 1),
-    font_name TEXT,
-    font_size INTEGER,
-    passwd TEXT
+    passwd TEXT,
+    moneda1 TEXT,
+    moneda2 TEXT,
+    moneda3 TEXT
 );
 
 -- Insertar registros iniciales (solo si no existen)
 INSERT OR IGNORE INTO dinero (id, total) VALUES (1, 0);
-INSERT OR IGNORE INTO configuracion (id, font_name, font_size, passwd)
-VALUES (1, 'Arial', 12, '');
+INSERT OR IGNORE INTO configuracion (id, passwd, moneda1, moneda2, moneda3)
+VALUES (1, '', 'ARS', 'USD', 'EUR');

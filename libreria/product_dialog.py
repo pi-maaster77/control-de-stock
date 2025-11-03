@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import ttkbootstrap as tb
 import sqlite3
+from libreria.toplevel import TopLevel
 
 """
 Reusable product selection / add dialog.
@@ -33,9 +34,9 @@ class ProductDialog:
             except Exception:
                 pass
         if themename:
-            self.top = tb.Toplevel(parent, themename=themename)
+            self.top = TopLevel(parent, themename=themename)
         else:
-            self.top = tb.Toplevel(parent)
+            self.top = TopLevel(parent)
         self.top.title(title)
 
         self.nombre_var = tk.StringVar()

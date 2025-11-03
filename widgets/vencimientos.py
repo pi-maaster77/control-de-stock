@@ -3,7 +3,9 @@ from tkinter import ttk, messagebox
 import datetime
 import libreria.querry as querry
 from libreria.product_dialog import ProductDialog
+from libreria.toplevel import TopLevel
 from libreria.boton import *
+
 
 class Vencimientos(ttk.Frame):
     """Pestaña para mostrar productos próximos a vencer y gestionar vencimientos."""
@@ -186,7 +188,7 @@ class Vencimientos(ttk.Frame):
         if fecha_val:
             fecha_date = self._parse_fecha_text(fecha_val) or None
 
-        ventana = tk.Toplevel(self)
+        ventana = TopLevel(self)
         ventana.title("Editar Vencimiento")
 
         nombre_var = tk.StringVar(value=nombre_val or "")

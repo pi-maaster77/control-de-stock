@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import sqlite3
 import datetime
 from libreria.boton import *
+from libreria.toplevel import TopLevel
 
 
 class Stock(ttk.Frame):
@@ -68,7 +69,7 @@ class Stock(ttk.Frame):
             except Exception as e:
                 messagebox.showerror("Error", f"Error al editar producto: {e}")
 
-        top = tk.Toplevel(self)
+        top = TopLevel(self)
         top.title("Editar Producto")
 
         tk.Label(top, text="Código de Barras:").grid(row=0, column=0, padx=5, pady=5)
@@ -152,7 +153,7 @@ class Stock(ttk.Frame):
                 messagebox.showerror("Error", f"Error al añadir producto: {e}")
 
 
-        top = tk.Toplevel(self)
+        top = TopLevel(self)
         top.title("Añadir Producto")
 
         tk.Label(top, text="Código de Barras:").grid(row=0, column=0, padx=5, pady=5)

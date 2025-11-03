@@ -3,6 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox, filedialog
 # from libreria.estilo import Estilo
 from libreria.querry import ejecutar_sql_desde_archivo
+from libreria.toplevel import TopLevel
 import sqlite3
 
 class Menu(tk.Menu):
@@ -12,15 +13,14 @@ class Menu(tk.Menu):
         self.setup()
     
     def setup(self):
-        top = tk.Toplevel(self.master)
         archivo = tk.Menu(self, tearoff=0)
         archivo.add_command(label="Nuevo...", command=self.nuevo)
         archivo.add_command(label="Abrir...", command=self.abrir)
 
         archivo.add_separator()
 
-        archivo.add_command(label="Modo Claro", command=lambda : top.master.cambiar_tema("flatly"))
-        archivo.add_command(label="Modo Oscuro", command=lambda : top.master.cambiar_tema("darkly"))    
+        archivo.add_command(label="Modo Claro", command=lambda : self.master.cambiar_tema("flatly"))
+        archivo.add_command(label="Modo Oscuro", command=lambda : self.master.cambiar_tema("darkly"))    
 
         archivo.add_separator()
 
@@ -50,7 +50,7 @@ class Menu(tk.Menu):
             finally:
                 connection.close()
 
-        cambiar_window = tk.Toplevel(self.master)
+        cambiar_window = TopLevel(self.master)
         cambiar_window.title("Cambiar Contraseña")
 
         ttk.Label(cambiar_window, text="Contraseña Actual:").grid(row=0, column=0, padx=10, pady=10)

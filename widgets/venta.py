@@ -5,6 +5,7 @@ import datetime
 import libreria.recibo as recibo
 from libreria.product_dialog import ProductDialog
 from libreria.boton import * 
+from libreria.toplevel import TopLevel
 
 sqlite3.register_adapter(datetime.datetime, lambda val: val.isoformat(" "))
 sqlite3.register_converter("timestamp", lambda val: datetime.datetime.fromisoformat(val.decode()))
@@ -148,7 +149,7 @@ class Venta(ttk.Frame):
         cdb, nombre, precio, cantidad_actual = item['values']
         cantidad_actual = int(cantidad_actual)
 
-        editar_ventana = tk.Toplevel(self)
+        editar_ventana = TopLevel(self)
         editar_ventana.title("Editar Producto en la Venta")
 
         stock_disponible = 0
