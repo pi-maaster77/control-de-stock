@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from libreria.boton import *
 import sqlite3
 import urllib.request
 import json
@@ -45,10 +46,10 @@ class Caja(ttk.Frame):
         botones_frame = ttk.Frame(self)
         botones_frame.pack(pady=10)
 
-        ttk.Button(botones_frame, text="Actualizar", command=self.actualizar_total).grid(row=0, column=0, padx=5)
-        ttk.Button(botones_frame, text="Modificar", command=self.modificar_total).grid(row=0, column=1, padx=5)
-        ttk.Button(botones_frame, text="+ Agregar", command=self.agregar_dinero).grid(row=0, column=2, padx=5)
-        ttk.Button(botones_frame, text="- Quitar", command=self.quitar_dinero).grid(row=0, column=3, padx=5)
+        Boton(botones_frame, tipo=ACTUALIZAR, command=self.actualizar_total).grid(row=0, column=0, padx=5)
+        Boton(botones_frame, tipo=EDITAR, command=self.modificar_total).grid(row=0, column=1, padx=5)
+        Boton(botones_frame, tipo=AGREGAR, command=self.agregar_dinero).grid(row=0, column=2, padx=5)
+        Boton(botones_frame, tipo=QUITAR, command=self.quitar_dinero).grid(row=0, column=3, padx=5)
         ttk.Button(botones_frame, text="Configurar monedas", command=self.configurar_monedas).grid(row=0, column=4, padx=5)
 
     def configurar_monedas(self):

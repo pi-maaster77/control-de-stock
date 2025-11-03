@@ -7,9 +7,10 @@ ACTUALIZAR = 1
 AGREGAR = 2
 EDITAR = 3
 ELIMINAR = 4
+QUITAR =5
 
 # Definición de iconos
-ICONO = (" ", "R", "+", "E", "D")
+ICONO = ("📄", "🔄", "+", "✏️", "🗑️", "-")
 
 # Definición de leyendas para cada tipo de botón
 LEYENDAS = {
@@ -17,7 +18,8 @@ LEYENDAS = {
     ACTUALIZAR: "Actualizar",
     AGREGAR: "Agregar",
     EDITAR: "Editar",
-    ELIMINAR: "Eliminar"
+    ELIMINAR: "Eliminar",
+    QUITAR: "Quitar"
 }
 
 class Tooltip:
@@ -53,6 +55,7 @@ class Boton(Button):
         AGREGAR: "success.TButton",
         EDITAR: "warning.TButton",
         ELIMINAR: "danger.TButton",
+        QUITAR: "danger.TButton"
     }
 
     def __init__(self, master=None, tipo=BLANCO, *args, **kwargs):
