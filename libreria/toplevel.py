@@ -1,5 +1,4 @@
 import ttkbootstrap as tb
-from tkinter import Label
 
 class TopLevel(tb.Toplevel):
     def __init__(self, master=None, **kwargs):

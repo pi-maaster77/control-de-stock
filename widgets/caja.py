@@ -2,9 +2,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from libreria.boton import *
 import sqlite3
-import urllib.request
-import json
 from libreria.toplevel import TopLevel
+from libreria.conversor import *
+import os
+
+class LoginError(Exception):
+    def __init__(self):
+        super().__init__("Error de autenticacion")
 
 class Caja(ttk.Frame):
     def __init__(self, notebook, db):
@@ -96,73 +100,56 @@ class Caja(ttk.Frame):
 
         ttk.Button(popup, text="Guardar", command=guardar).pack(pady=10)
 
-    def get_conversion_rates(self):
-        """
-        Intenta obtener las tasas de conversión desde exchangerate.host.
-        Si falla, devuelve tasas por defecto (estimadas).
-        """
-        # Determinar monedas a consultar
-        secundarias = getattr(self, 'monedas_secundarias', self.monedas_secundarias)
-        symbols = ','.join(secundarias)
-        try:
-            url = f"https://api.exchangerate.host/latest?base={self.base_currency}&symbols={symbols}"
-            with urllib.request.urlopen(url, timeout=5) as resp:
-                data = json.load(resp)
-                rates = data.get("rates", {})
-                # Si falta alguna, poner valor por defecto
-                for m in secundarias:
-                    if m not in rates:
-                        rates[m] = 0.01
-                return rates
-        except Exception:
-            # Tasas por defecto estimadas.
-            return {m: 0.01 for m in secundarias}
-
     def actualizar_total(self):
         try:
+            # Obtener el total en la moneda base desde la base de datos
             conn = sqlite3.connect(self.db)
             cursor = conn.cursor()
             cursor.execute("SELECT total FROM dinero WHERE id=1")
             result = cursor.fetchone()
             conn.close()
+            
             if result:
                 total = float(result[0])
                 self.total_var.set(f"{total:.2f}")
-                # obtener tasas y actualizar variables de conversión
+                
+                # Obtener tasas de conversión
                 rates = self.get_conversion_rates()
-                secundarias = getattr(self, 'monedas_secundarias', self.monedas_secundarias)
-                # Limpiar etiquetas previas
+                # Limpiar etiquetas de conversión previas
                 for widget in self.winfo_children():
                     if isinstance(widget, ttk.Frame):
                         for child in widget.winfo_children():
                             if isinstance(child, ttk.Label) and "(" in child.cget("text"):
                                 child.config(text="")
-                # Mostrar solo las secundarias seleccionadas
-                conv_frame = None
-                for widget in self.winfo_children():
-                    if isinstance(widget, ttk.Frame):
-                        conv_frame = widget
-                        break
-                if conv_frame:
-                    for i, m in enumerate(secundarias):
-                        val = total * rates.get(m, 0.0)
-                        label = f"{val:.2f} {m}"
-                        # Buscar el label correspondiente
-                        for child in conv_frame.winfo_children():
-                            if isinstance(child, ttk.Label) and m in child.cget("text"):
-                                child.config(text=label)
+
+                # Mostrar las conversiones de la moneda base a las secundarias seleccionadas
+                for i, moneda in enumerate(self.monedas_secundarias):
+                    # Convertir el total a la moneda secundaria
+                    valor_convertido = convertir_moneda(total, self.base_currency, moneda, rates)
+                    if valor_convertido is not None:
+                        label = f"{valor_convertido:.2f} {moneda}"
+                        # Encontrar la etiqueta correspondiente y actualizarla
+                        conv_frame = None
+                        for widget in self.winfo_children():
+                            if isinstance(widget, ttk.Frame):
+                                conv_frame = widget
+                                break
+                        if conv_frame:
+                            for child in conv_frame.winfo_children():
+                                if isinstance(child, ttk.Label) and moneda in child.cget("text"):
+                                    child.config(text=label)
             else:
                 self.total_var.set("0.00")
-                # Limpiar etiquetas
+                # Limpiar las etiquetas de conversión
                 for widget in self.winfo_children():
                     if isinstance(widget, ttk.Frame):
                         for child in widget.winfo_children():
                             if isinstance(child, ttk.Label) and "(" in child.cget("text"):
                                 child.config(text="0.00")
+
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo obtener el total: {e}")
 
-    
     def modificar_total(self):
         try:
             self.autenticar()
@@ -253,7 +240,25 @@ class Caja(ttk.Frame):
             raise LoginError()
         
         return True
+    def get_conversion_rates(self):
+        """
+        Lee las tasas de conversión desde el archivo de tasas.
+        Devuelve un diccionario con las tasas de conversión de todas las monedas secundarias.
+        """
+        try:
+            # Obtiene las tasas de conversión desde el archivo
+            rates = leer_tasas_archivo()
 
-class LoginError(Exception):
-    def __init__(self):
-        super().__init__("Error de autenticacion")
+            # Si no se obtienen tasas, devuelve las tasas predeterminadas
+            if not rates:
+                print("No se encontraron tasas válidas, usando tasas predeterminadas.")
+                return {m: 0.01 for m in self.monedas_secundarias}
+
+            # Asegura que las tasas estén completas para todas las monedas secundarias
+            return rates
+        
+        except Exception as e:
+            print(f"Error al obtener las tasas de conversión: {e}")
+            return {m: 0.01 for m in self.monedas_secundarias}
+
+

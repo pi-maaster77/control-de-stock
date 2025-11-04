@@ -1,0 +1,1 @@
+Ejecuta el archivo run.bat para que se instalen las librerias necesarias y se ejecute el programa. va a tardar porque debe crear el entorno virtual e instalar librerias  
