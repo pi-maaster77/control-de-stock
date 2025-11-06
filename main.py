@@ -9,10 +9,14 @@ from widgets.vencimientos import Vencimientos
 from widgets.menu import Menu
 
 
+import sys
+
 class Main(tb.Window):
     def __init__(self, db=None):
         super().__init__(themename="darkly")  # Tema por defecto
         self.db = db
+        self.show_menu = "--no-menu" not in sys.argv
+        self.config(menu=Menu(self, self.db))
 
         if self.db is None:
             try:
@@ -24,8 +28,7 @@ class Main(tb.Window):
         else:
             self.iniciar_interfaz()
 
-
-        self.config(menu=Menu(self, self.db))
+        # Configurar el menú solo si no se especificó --no-menu
 
         self.title("Gestor de Stock")
         self.mainloop()

@@ -69,23 +69,43 @@ class Menu(tk.Menu):
         archivo = filedialog.asksaveasfilename(title="Guardar", defaultextension=".db", filetypes=[("Base sqlite", "*.db")])
         if archivo:
             ejecutar_sql_desde_archivo(archivo, "stock.sql")
-            from main import Main
-            # Cerrar ventana principal actual antes de abrir la nueva
-            root = self.master
-            root.destroy()
-            Main(archivo)
             with open("last.txt", "w") as f:
                 f.write(archivo)
+            # Reiniciar la aplicación
+            root = self.master
+            root.destroy()
+            import sys
+            import os
+            # Detectar si estamos ejecutando como script o como ejecutable
+            if getattr(sys, 'frozen', False):
+                # Estamos en un ejecutable
+                program = sys.executable
+                args = [program, "--no-menu"]
+            else:
+                # Estamos en modo desarrollo
+                program = sys.executable
+                args = [program, "-m", "main", "--no-menu"]
+            os.execv(program, args)
         else:
             messagebox.showerror("Archivo no seleccionado")
 
     def abrir(self):
         archivo = filedialog.askopenfilename(title="Abrir", defaultextension=".db", filetypes=[("Base sqlite", "*.db")])
         if archivo:
-            from main import Main
-            # Cerrar ventana principal actual antes de abrir la nueva
-            root = self.master
-            root.destroy()
-            Main(archivo)
             with open("last.txt", "w") as f:
                 f.write(archivo)
+            # Reiniciar la aplicación
+            root = self.master
+            root.destroy()
+            import sys
+            import os
+            # Detectar si estamos ejecutando como script o como ejecutable
+            if getattr(sys, 'frozen', False):
+                # Estamos en un ejecutable
+                program = sys.executable
+                args = [program, "--no-menu"]
+            else:
+                # Estamos en modo desarrollo
+                program = sys.executable
+                args = [program, "-m", "main", "--no-menu"]
+            os.execv(program, args)

@@ -1,0 +1,1 @@
+pyinstaller --onefile --windowed --name ControlDeStock main.py --add-data "stock.sql;."

@@ -1,4 +1,21 @@
 import sqlite3
+import os
+import sys
+
+
+def resource_path(relative_path: str) -> str:
+    """Return absolute path to resource, working for dev and for PyInstaller bundles.
+
+    - In development returns path relative to the project root (one level up from this file).
+    - When frozen by PyInstaller returns the path inside the temporary _MEIPASS folder.
+    """
+    if getattr(sys, "frozen", False):
+        base = getattr(sys, "_MEIPASS", os.path.abspath("."))
+    else:
+        # this file is in <project>/libreria/querry.py -> project root is one level up
+        base = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+    return os.path.join(base, relative_path)
+
 
 def get_connection(db_path: str):
     """Return a sqlite3 connection with sensible pragmas for concurrent GUI use.
@@ -21,7 +38,9 @@ def get_connection(db_path: str):
 
 
 def ejecutar_sql_desde_archivo(db, sql):
-    with open(sql, 'r') as file:
+    # Resolver la ruta del archivo SQL tanto en desarrollo como en ejecutable
+    sql_path = resource_path(sql)
+    with open(sql_path, 'r', encoding='utf-8') as file:
         sql_content = file.read()
 
     statements = [s.strip() for s in sql_content.split(';') if s.strip()]
